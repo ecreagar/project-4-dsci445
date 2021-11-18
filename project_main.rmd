@@ -1,0 +1,56 @@
+---
+title: "Group 4 Final Project"
+author: "Ethan, Kilbourne, Michael"
+date: "11/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# for authenticating github
+# https://gist.githubusercontent.com/z3tt/3dab3535007acf108391649766409421/raw/2ce9dba43ead7e88d9f2416b9fd21379b227af32/github.R
+library(usethis)
+
+```
+
+```{r packages}
+library(tidyverse)
+library(knitr)
+library(reticulate)
+
+# install python packages using conda
+py_install("pandas")
+py_install("numpy")
+```
+
+```{python}
+# Run python code like this
+print('hello world')
+# create a new python session variable
+x = 1
+```
+
+
+```{r}
+# Run R code in these chunks like normal
+print('hello world')
+
+# acccess our python session variables
+print(py$x)
+
+# create a new variable to access in the python session
+py$y <- c(1,2,3)
+
+y <- 'cow'
+```
+
+```{python}
+# access python session variables from python chunks
+y
+
+# You can't access R session variables from python chunks
+R$y
+```
