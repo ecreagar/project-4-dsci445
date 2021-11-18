@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-# for authenticating github
+# for authenticating github, follow the instructions below
 # https://gist.githubusercontent.com/z3tt/3dab3535007acf108391649766409421/raw/2ce9dba43ead7e88d9f2416b9fd21379b227af32/github.R
 library(usethis)
 
