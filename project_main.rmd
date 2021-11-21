@@ -22,15 +22,38 @@ library(knitr)
 library(reticulate)
 
 # install python packages using conda
-py_install("pandas")
-py_install("numpy")
+# py_install("pandas")
+# py_install("numpy")
 ```
+
+Read the subsetted data:
+
+```{r}
+data <- read_csv('Data/punts_1percent.csv')
+data
+```
+
+
+Need to:
+- Find all the punts from one game and extract the corresponding frames
+- Extract the frames (punt made and kick fielded)
+- Join the player positions from each return
+
+
+```{r}
+readr
+```
+
+
+
+
 
 ```{python}
 # Run python code like this
 print('hello world')
 # create a new python session variable
 x = 1
+
 ```
 
 
@@ -38,13 +61,14 @@ x = 1
 # Run R code in these chunks like normal
 print('hello world')
 
-# acccess our python session variables
-print(py$x)
 
 # create a new variable to access in the python session
 py$y <- c(1,2,3)
 
 y <- 'cow'
+
+x_new <- py$x()
+x_new
 ```
 
 ```{python}
