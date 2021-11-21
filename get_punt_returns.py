@@ -10,8 +10,9 @@ def punt_return_ids(data: pd.DataFrame):
 	"""
 	Select the punts that were returned from the plays.csv file (about 2000 total)
 	"""
+	acceptable = ['Return', 'Fair Catch', 'Downed']
 	return data.loc[(data['specialTeamsPlayType'] == 'Punt') & 
-					(data['specialTeamsResult'] == 'Return')][['gameId','playId']]
+					(data['specialTeamsResult'].isin(acceptable))][['gameId','playId','specialTeamsResult']]
 
 
 def extract_punts_oneyear(filename: str, 
