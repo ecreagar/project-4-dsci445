@@ -10,7 +10,7 @@ def punt_return_ids(data: pd.DataFrame):
 	"""
 	Select the punts that were returned from the plays.csv file (about 2000 total)
 	"""
-	acceptable = ['Return', 'Fair Catch', 'Downed']
+	acceptable = ['Return', 'Fair Catch']
 	return data.loc[(data['specialTeamsPlayType'] == 'Punt') & 
 					(data['specialTeamsResult'].isin(acceptable))][['gameId','playId','specialTeamsResult']]
 
@@ -29,8 +29,8 @@ def extract_punts_oneyear(filename: str,
 	tracking_data = read_data(filename)
 	# inner join the data so we only retain the punts.
 	punts = ids.set_index(['gameId',
-						   'playId']).join(tracking_data.set_index(['gameId',
-						   	 										'playId']), how='inner')
+			       'playId']).join(tracking_data.set_index(['gameId',
+						   	 		'playId']), how='inner')
 	punts.to_csv(fileout)
 
 
