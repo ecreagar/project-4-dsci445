@@ -47,7 +47,7 @@ def combine_punts(punt_files: list,
 
 
 def main():
-	filename = 'plays.csv'
+	filename = 'Data/plays.csv'
 	data = read_data(filename)
 	ids = punt_return_ids(data)
 	for i in [2018, 2019, 2020]:
