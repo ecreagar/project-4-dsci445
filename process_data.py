@@ -44,7 +44,7 @@ def group_data(data: str, fileout: str):
     print("Grouping data...")
     data = data.groupby("gameId")
     print("Saving file...")
-    data.reset_index().to_csv(fileout, index="false")
+    # data.to_csv(fileout, index="false")
     print("Done!\n")
 
 
@@ -53,8 +53,8 @@ def main():
     merge_stats(filename, scoutfile="Data/PFFScoutingData.csv", fileout="mergeStats.csv")
     remove_features(data="mergeStats.csv", fileout="removeFeatures.csv")
     group_data(data="removeFeatures.csv", fileout="groupedData.csv")
-    # os.remove("mergeStats.csv")
-    # os.remove("removeFeatures.csv")
+    os.remove("mergeStats.csv")
+    os.remove("removeFeatures.csv")
 
 
 if __name__ == '__main__':
