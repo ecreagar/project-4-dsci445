@@ -25,10 +25,13 @@ def remove_features(data: str, fileout: str):
     """
     print("-----Removing Unnecessary Features-----")
     print("Loading data...")
-    data = pd.read_csv("mergeStats.csv")
+    data = pd.read_csv("mergeStats.csv", index_col="false")
     print("Subsetting data...")
+    # Columns to be kept
     thindata = data[["gameId", "playId", "specialTeamsResult", "x", "y", "dis", "event", "nflId", "team",
                      "frameId", "playDirection", "displayName", "hangTime"]]
+    # Events to be kept
+    thindata = data.loc[data['event'].isin(["punt_received", "tackle"])]
     print("Saving file...")
     thindata.to_csv(fileout, index="false")
     print("Done!\n")
@@ -42,19 +45,28 @@ def group_data(data: str, fileout: str):
     print("Loading data...")
     data = pd.read_csv(data)
     print("Grouping data...")
-    data = data.groupby("gameId")
+
+    newdata = pd.DataFrame()
+
+    for row in data.itertuples():
+        if row.event == "punt_received":
+            for player in data.loc[data['gameId'] == row.gameId]:
+                newdata.append(data.get(player))
+
+    # newdata = pd.DataFrame(newdata, columns=['test'])
     print("Saving file...")
-    # data.to_csv(fileout, index="false")
+    newdata.to_csv(fileout, index="false")
+    # print(newdata)
     print("Done!\n")
 
 
 def main():
     filename = "puntreturns.csv"
-    merge_stats(filename, scoutfile="Data/PFFScoutingData.csv", fileout="mergeStats.csv")
-    remove_features(data="mergeStats.csv", fileout="removeFeatures.csv")
+    # merge_stats(filename, scoutfile="Data/PFFScoutingData.csv", fileout="mergeStats.csv")
+    # remove_features(data="mergeStats.csv", fileout="removeFeatures.csv")
     group_data(data="removeFeatures.csv", fileout="groupedData.csv")
-    os.remove("mergeStats.csv")
-    os.remove("removeFeatures.csv")
+    # os.remove("mergeStats.csv")
+    # os.remove("removeFeatures.csv")
 
 
 if __name__ == '__main__':
