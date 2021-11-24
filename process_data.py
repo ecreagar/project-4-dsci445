@@ -25,7 +25,7 @@ def remove_features(data: str, fileout: str):
     """
     print("-----Removing Unnecessary Features-----")
     print("Loading data...")
-    data = pd.read_csv("mergeStats.csv", index_col="false")
+    data = pd.read_csv("mergeStats.csv")
     print("Subsetting data...")
     # Columns to be kept
     thindata = data[["gameId", "playId", "specialTeamsResult", "x", "y", "dis", "event", "nflId", "team",
@@ -45,13 +45,7 @@ def group_data(data: str, fileout: str):
     print("Loading data...")
     data = pd.read_csv(data)
     print("Grouping data...")
-    newdata = pd.DataFrame()
-
-    for row in data.itertuples():
-        if row.event == "punt_received":
-            for player in data.loc[data['gameId'] == row.gameId]:
-                newdata.append(data.get(player))
-
+    newdata = data.groupby(["gameId", "playId", "frameId"]).agg({'x': lambda x: ', '.join}).reset_index()
     print("Saving file...")
     newdata.to_csv(fileout, index="false")
     # print(newdata)
