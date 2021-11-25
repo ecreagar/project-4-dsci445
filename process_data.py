@@ -45,7 +45,7 @@ def group_data(data: str, fileout: str):
     print("Loading data...")
     data = pd.read_csv(data)
     print("Grouping data...")
-    newdata = data.groupby(["gameId", "playId", "frameId"]).agg({'x': lambda x: ', '.join}).reset_index()
+    newdata = data.groupby(["gameId", "playId", "frameId"]).agg({'x': lambda x: ', '.join(str(x))}).reset_index()
     print("Saving file...")
     newdata.to_csv(fileout, index="false")
     # print(newdata)
@@ -54,8 +54,8 @@ def group_data(data: str, fileout: str):
 
 def main():
     filename = "puntreturns.csv"
-    merge_stats(filename, scoutfile="Data/PFFScoutingData.csv", fileout="mergeStats.csv")
-    remove_features(data="mergeStats.csv", fileout="removeFeatures.csv")
+    # merge_stats(filename, scoutfile="Data/PFFScoutingData.csv", fileout="mergeStats.csv")
+    # remove_features(data="mergeStats.csv", fileout="removeFeatures.csv")
     group_data(data="removeFeatures.csv", fileout="groupedData.csv")
     # os.remove("mergeStats.csv")
     # os.remove("removeFeatures.csv")
