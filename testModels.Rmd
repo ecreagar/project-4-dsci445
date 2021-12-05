@@ -5,18 +5,28 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Installing a bunch of packages
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(ISLR)
+library(caret)
+library(MASS)
+library(class)
+library(knitr)
+library(leaps)
+library(glmnet)
+library(boot)
+library(gam)
+library(tree)
+library(gbm)
+library(randomForest)
+library(e1071)
 ```
 
 ```{r}
 puntinfo = read.csv("Data/puntinfo.csv")
-```
-
-```{r}
-tempSplit = strsplit(puntinfo[1, "away_player_1"], ",")[[1]]
-tempX = substring(tempSplit[1], 2)
-tempY = substring(tempSplit[2], 2,nchar(tempSplit[2])-1)
-tempX
-tempY
 ```
 
 ```{r}
@@ -37,6 +47,31 @@ for (i in 1:length(colList)){
     puntinfo[j, colList[i]] = calcDistance(tempX, tempY, catchX, catchY)
   }
 }
+
+puntinfo[9:30] <- sapply(puntinfo[9:30], as.numeric)
+sapply(puntinfo, class)
 ```
+
+```{r}
+drop <- c("X","gameId", "playId", "specialTeamsResult")
+testLm <- lm(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)])
+
+summary(testLm)
+```
+
+
+```{r}
+logitModel <- glm(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)])
+
+summary(logitModel)
+```
+
+```{r}
+subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 5)
+
+summary(subsetMod)
+```
+
+
 
 
