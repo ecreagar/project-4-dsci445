@@ -49,28 +49,84 @@ for (i in 1:length(colList)){
 }
 
 puntinfo[9:30] <- sapply(puntinfo[9:30], as.numeric)
-sapply(puntinfo, class)
+drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y")
+puntinfo <- puntinfo[,!(names(puntinfo) %in% drop)]
+# puntinfo <- puntinfo[-4]
 ```
 
 ```{r}
-drop <- c("X","gameId", "playId", "specialTeamsResult")
-testLm <- lm(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)])
+sample <- createDataPartition(puntinfo$yards_gained, p = 0.6, list = FALSE)
+
+train <- puntinfo[sample,]
+test <- puntinfo[-sample,]
+
+xtrain <- model.matrix(yards_gained~., train)[,-1]
+xtest <- model.matrix(yards_gained~., test)[,-1]
+```
+
+
+```{r}
+testLm <- lm(yards_gained ~ ., data = train)
 
 summary(testLm)
+
+plot(testLm)
+
+pred <- predict(testLm, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+head(predTable)
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_smooth(method='lm', formula = y~x)
 ```
 
 
 ```{r}
-logitModel <- glm(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)])
+logitModel <- glm(yards_gained ~ ., data = train)
 
 summary(logitModel)
 ```
 
 ```{r}
-subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 5)
+subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 20, method = "backward")
+
+ggplot() +
+    geom_point(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) + 
+    geom_line(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) +
+    ylab("AdjR2") +
+    xlab("Size of Subset")
 
 summary(subsetMod)
 ```
+
+```{r}
+# Issue when removing columns
+lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 1, nfolds = 10)
+
+pred <- predict(lassoMod, s = lassoMod$lambda.min, newx = xtest)
+mean((pred - test$yards_gained)^2)
+```
+
+```{r}
+gamMod <- gam(yards_gained ~ ., data = train)
+summary(gamMod)
+
+
+plot(x = puntinfo$away_player_4, y = puntinfo$yards_gained)
+```
+
+```{r}
+treeModel <- tree(yards_gained ~., data = train)
+summary(treeModel)
+plot(treeModel)
+text(treeModel)
+```
+
+
+
 
 
 
