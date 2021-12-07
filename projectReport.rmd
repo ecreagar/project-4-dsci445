@@ -26,16 +26,63 @@ library(e1071)
 
 ```
 
-# New Section
+# Introduction - Ethan
 
-## slide 1
+## "Expected" metrics
 
-Sample text
+- In sports analytics, "expected" metrics are used to evaluate player or team performance
+  - Soccer: Expected goals (xG) $^{[1]}$, expected assists, expected points
+  - Basketball: Expected points, expected possession value $^{[2]}$
+  - Football: Expected Yards after Catch $^{[3]}$
+  
+- Many uses for these metrics
+  - Compare a player's output to an objective baseline
+  - Evaluate a team's performance by eliminating randomness
+  
+## Expected Yards After Fielding (xYAF)
 
-## slide 2
+- Given the current conditions when fielding a punt, how many yards do we expect the punt returner to gain
 
-test
+- Takes into account
+  - Punt position
+  - Fielding position
+  - All defender positions (relative)
+  - Punt hang time
+  
+- Should return an accurate estimate of how many yards the player gains based on these factors
 
-## slide 3
+## Data
 
-test
+- NFL 2022 Big Data Bowl 
+  - Focuses on Special Teams Plays
+  - Contains 19,979 plays from 2018 to 2020
+  
+- After filtering, we predict based on ~2000 returned punts
+
+
+# Model Set 1 - Mikey
+
+## slide
+
+text here
+
+# Model Set 2 - Kilbourne
+
+## slide 
+
+text here
+
+# evaluation and conclusion - Ethan
+
+## slide
+
+text here
+
+## Works Cited
+
+[1] Sam Green. Assessing the performance of Premier League goalscorers. Stats
+Perform, 2012.
+
+[2] https://grantland.com/features/expected-value-possession-nba-analytics/
+
+[3] https://www.nfl.com/news/next-gen-stats-intro-to-expected-yards-after-catch-0ap3000000983644
