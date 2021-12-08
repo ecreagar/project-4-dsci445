@@ -130,7 +130,7 @@ summary(subsetMod)
 
 ```{r}
 # Issue when removing columns
-lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 1, nfolds = 10)
+lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 1, nfolds = 10)
 
 pred <- predict(lassoMod, s = lassoMod$lambda.min, newx = xtest)
 mean((pred - test$yards_gained)^2)
