@@ -55,6 +55,31 @@ puntinfo <- puntinfo[,!(names(puntinfo) %in% drop)]
 ```
 
 ```{r}
+noPlayerList = c("hangTime", "playDirection", "punt_position_x", "punt_position_y", "field_position_x", "field_position_y", "yards_gained")
+
+awayPlayerList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11")
+
+homePlayerList = c("home_player_1", "home_player_2", "home_player_3", "home_player_4", "home_player_5", "home_player_6", "home_player_7", "home_player_8", "home_player_9", "home_player_10", "home_player_11")
+
+noPlayerDF = puntinfo[, (names(puntinfo) %in% noPlayerList)]
+awayPlayerDF = puntinfo[, (names(puntinfo) %in% awayPlayerList)]
+homePlayerDF = puntinfo[, (names(puntinfo) %in% homePlayerList)]
+
+playerSorted = data.frame(matrix(ncol = 22, nrow=0))
+colnames(playerSorted) = colList
+
+for (i in 1:nrow(awayPlayerDF)){
+  tempRowAway = sort(unlist(awayPlayerDF[i,], use.names = FALSE))
+  tempRowHome = sort(unlist(homePlayerDF[i,], use.names = FALSE))
+  tempRow = append(tempRowAway, tempRowHome)
+  playerSorted[nrow(playerSorted)+1,] = tempRow
+}
+
+puntSorted = cbind(noPlayerDF, playerSorted)
+```
+
+
+```{r}
 sample <- createDataPartition(puntinfo$yards_gained, p = 0.6, list = FALSE)
 
 train <- puntinfo[sample,]
