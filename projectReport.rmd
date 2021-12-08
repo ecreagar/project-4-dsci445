@@ -26,8 +26,6 @@ library(e1071)
 
 ```
 
-# Introduction
-
 ## Background - "Expected" metrics
 
 - In sports analytics, "expected" metrics are used to evaluate player or team performance
