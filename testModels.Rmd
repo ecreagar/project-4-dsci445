@@ -23,6 +23,7 @@ library(tree)
 library(gbm)
 library(randomForest)
 library(e1071)
+library(splines)
 ```
 
 ```{r}
@@ -80,7 +81,7 @@ puntSorted = cbind(noPlayerDF, playerSorted)
 
 
 ```{r}
-sample <- createDataPartition(puntinfo$yards_gained, p = 0.6, list = FALSE)
+sample <- createDataPartition(puntSorted$yards_gained, p = 0.6, list = FALSE)
 
 train <- puntinfo[sample,]
 test <- puntinfo[-sample,]
@@ -136,6 +137,14 @@ mean((pred - test$yards_gained)^2)
 ```
 
 ```{r}
+lambda <- 10^seq(-2, 10, length.out = 100)
+ridgeMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 0, lambda = lambda)
+ridgePred = predict(ridgeMod, xtest, s=ridgeMod$lambda.min)
+mean((ridgePred - test$yards_gained)^2)
+```
+
+
+```{r}
 gamMod <- gam(yards_gained ~ ., data = train)
 summary(gamMod)
 
@@ -150,9 +159,7 @@ plot(treeModel)
 text(treeModel)
 ```
 
+```{r}
 
-
-
-
-
+```
 
