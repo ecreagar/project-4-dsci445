@@ -190,7 +190,7 @@ text(treeModel)
 
 ```{r}
 # Random Forest
-forestMod <- randomForest(yards_gained ~ hangTime, data = train, importance = TRUE, na.action = na.pass)
+forestMod <- randomForest(yards_gained ~ ., data = train, importance = TRUE, na.action = na.pass)
 
 ```
 
