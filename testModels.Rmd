@@ -50,8 +50,6 @@ for (i in 1:length(colList)){
 }
 
 puntinfo[9:30] <- sapply(puntinfo[9:30], as.numeric)
-drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y", "playDirection")
-puntinfo <- puntinfo[,!(names(puntinfo) %in% drop)]
 ```
 
 ```{r}
@@ -86,11 +84,15 @@ for (i in 1:nrow(awayPlayerDF)){
 }
 
 puntSorted = cbind(noPlayerDF, playerSorted)
+# Store gameIds and playIds for specific analysis
+puntinfo = puntSorted
 ```
 
 
 ```{r}
-sample <- createDataPartition(puntSorted$yards_gained, p = 0.6, list = FALSE)
+drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y", "playDirection")
+puntSorted<- puntSorted[,!(names(puntSorted) %in% drop)]
+sample <- createDataPartition(puntSorted$yards_gained, p = 0.8, list = FALSE)
 
 train <- puntSorted[sample,]
 test <- puntSorted[-sample,]
@@ -101,14 +103,14 @@ xtest <- model.matrix(yards_gained~., test)[,-1]
 
 
 ```{r}
-# Linear Model
-testLm <- lm(yards_gained ~ ., data = train)
+# Linear Regression
+lmMod <- lm(yards_gained ~ ., data = train)
 
-summary(testLm)
+summary(lmMod)
 
-plot(testLm)
+plot(lmMod)
 
-pred <- predict(testLm, test)
+pred <- predict(lmMod, test)
 
 predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
 
@@ -116,14 +118,19 @@ ggplot(predTable, aes(x = actuals, y = predicted)) +
   geom_point() +
   geom_smooth(method='lm', formula = y~x) +
   geom_abline(color = 'red')
+
+
+lmMSE <- mean((pred - test$yards_gained)^2)
 ```
 
 
 ```{r}
 # Logistic Regression
 logitModel <- glm(yards_gained ~ ., data = train)
-
 summary(logitModel)
+
+pred <- predict(logitModel, test)
+logitMSE <- mean((pred - test$yards_gained)^2)
 ```
 
 ```{r}
@@ -136,6 +143,11 @@ ggplot() +
     ylab("AdjR2") +
     xlab("Size of Subset")
 
+which.max(summary(subsetMod)$adjr2)
+coef(subsetMod, 16)
+plot(subsetMod, scale = "adjr2")
+
+
 subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 20, method = "forward")
 
 ggplot() +
@@ -143,6 +155,11 @@ ggplot() +
     geom_line(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) +
     ylab("AdjR2") +
     xlab("Size of Subset")
+
+
+which.max(summary(subsetMod)$adjr2)
+coef(subsetMod, 16)
+plot(subsetMod, scale = "adjr2")
 ```
 
 ```{r}
@@ -156,6 +173,8 @@ predTable <- data.frame(cbind(actuals=test$yards_gained, pred=pred))
 ggplot(predTable, aes(x = actuals, y = pred)) +
   geom_point() +
   geom_abline(color = 'blue')
+
+lassoMSE <- mean((pred - test$yards_gained)^2)
 ```
 
 ```{r}
@@ -163,13 +182,14 @@ ggplot(predTable, aes(x = actuals, y = pred)) +
 lambda <- 10^seq(-2, 10, length.out = 100)
 ridgeMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 0, lambda = lambda)
 ridgePred = predict(ridgeMod, xtest, s=ridgeMod$lambda.min)
-mean((ridgePred - test$yards_gained)^2)
 
 predTable <- data.frame(cbind(actuals=test$yards_gained, pred=ridgePred))
 
 ggplot(predTable, aes(x = actuals, y = pred)) +
   geom_point() +
   geom_abline(color = 'blue')
+
+ridgeMSE <- mean((ridgePred - test$yards_gained)^2)
 ```
 
 
@@ -187,7 +207,7 @@ ggplot(predTable, aes(x = actuals, y = predicted)) +
   geom_smooth(method='gam', formula = y~x) +
   geom_abline(color = 'red')
 
-mean((pred - test$yards_gained)^2)
+gamMSE <- mean((pred - test$yards_gained)^2)
 ```
 
 ```{r}
@@ -195,7 +215,7 @@ splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + 
 
 splinePred <- predict(testLm, test)
 
-mean((splinePred - test$yards_gained)^2)
+splineMSE <- mean((splinePred - test$yards_gained)^2)
 ```
 
 ```{r}
@@ -204,17 +224,33 @@ treeModel <- tree(yards_gained ~., data = train)
 summary(treeModel)
 plot(treeModel)
 text(treeModel)
+
+pred <- predict(treeModel, test)
+treeMSE <- mean((pred - test$yards_gained)^2)
 ```
 
 
 ```{r}
 # Random Forest
-forestMod <- randomForest(yards_gained ~ ., data = train, importance = TRUE, na.action = na.pass)
+forestMod <- randomForest(yards_gained ~ ., data = train, importance = TRUE, ntree = 1000)
+forestMod
+pred <- predict(forestMod, test)
+forestMSE <- mean((pred - test$yards_gained)^2)
+```
 
+```{r}
+# SVM
+svmMod <- svm(yards_gained ~ ., data = train)
+predSVM <- predict(svmMod, test)
+
+svmMSE <- mean((predSVM - test$yards_gained)^2)
 ```
 
 
-```{r}
 
+```{r}
+# Analysis
+mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE))
+print(mseTable)
 ```
 
