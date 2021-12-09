@@ -110,6 +110,7 @@ ggplot(predTable, aes(x = actuals, y = predicted)) +
 
 
 ```{r}
+# Logistic Regression
 logitModel <- glm(yards_gained ~ ., data = train)
 
 summary(logitModel)
