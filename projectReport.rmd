@@ -103,7 +103,7 @@ table here
 
 # Evaluation and Conclusion
 
-## Model Evaluation
+## Player Evaluation
 
 text here
 
