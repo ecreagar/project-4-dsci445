@@ -6,6 +6,8 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+set.seed(445)
+
 # Installing a bunch of packages
 library(ggplot2)
 library(dplyr)
@@ -211,7 +213,7 @@ gamMSE <- mean((pred - test$yards_gained)^2)
 ```
 
 ```{r}
-splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + ns(punt_position_y, df=6) + ns(field_position_x, df=6) + ns(field_position_y, df=6) + ns(away_player_1, df=6)+ ns(away_player_2, df=6)+ ns(away_player_3, df=6)+ ns(away_player_4, df=6)+ ns(away_player_5, df=6)+ ns(away_player_6, df=6)+ ns(away_player_7, df=6)+ ns(away_player_8, df=6)+ ns(away_player_1, df=9)+ ns(away_player_10, df=6)+ ns(away_player_11, df=6)+ ns(home_player_1, df=6)+ ns(home_player_2, df=6)+ ns(home_player_3, df=6)+ ns(home_player_4, df=6)+ ns(home_player_5, df=6)+ ns(home_player_6, df=6)+ ns(home_player_7, df=6)+ ns(home_player_8, df=6)+ ns(home_player_1, df=9)+ ns(home_player_10, df=6)+ ns(home_player_11, df=6), data=train)
+splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + ns(punt_position_y, df=6) + ns(field_position_x, df=6) + ns(field_position_y, df=6) + ns(receiving_player_1, df=6)+ ns(receiving_player_2, df=6)+ ns(receiving_player_3, df=6)+ ns(receiving_player_4, df=6)+ ns(receiving_player_5, df=6)+ ns(receiving_player_6, df=6)+ ns(receiving_player_7, df=6)+ ns(receiving_player_8, df=6)+ ns(receiving_player_1, df=9)+ ns(receiving_player_10, df=6)+ ns(receiving_player_11, df=6)+ ns(punting_player_1, df=6)+ ns(punting_player_2, df=6)+ ns(punting_player_3, df=6)+ ns(punting_player_4, df=6)+ ns(punting_player_5, df=6)+ ns(punting_player_6, df=6)+ ns(punting_player_7, df=6)+ ns(punting_player_8, df=6)+ ns(punting_player_10, df=6)+ ns(punting_player_11, df=6), data=train)
 
 splinePred <- predict(testLm, test)
 
@@ -250,7 +252,7 @@ svmMSE <- mean((predSVM - test$yards_gained)^2)
 
 ```{r}
 # Analysis
-mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE))
+mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE))
 print(mseTable)
 ```
 
