@@ -112,19 +112,82 @@ slide:not(.current) .plotly.html-widget{
           </hgroup>
   </slide>
 
-<slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>New Section</h2></hgroup><article  id="new-section">
+<slide class=""><hgroup><h2>Background - &ldquo;Expected&rdquo; metrics</h2></hgroup><article  id="background---expected-metrics">
 
-</article></slide><slide class=""><hgroup><h2>slide 1</h2></hgroup><article  id="slide-1">
+<ul>
+<li>In sports analytics, &ldquo;expected&rdquo; metrics are used to evaluate player or team performance
 
-<p>Sample text</p>
+<ul>
+<li>Soccer: Expected goals (xG) \(^{[1]}\), expected assists, expected points</li>
+<li>Basketball: Expected points, expected possession value \(^{[2]}\)</li>
+<li>Football: Expected Yards after Catch \(^{[3]}\)</li>
+</ul></li>
+<li>Many uses for these metrics
 
-</article></slide><slide class=""><hgroup><h2>slide 2</h2></hgroup><article  id="slide-2">
+<ul>
+<li>Compare a player’s output to an objective baseline</li>
+<li>Evaluate a team’s performance by eliminating randomness</li>
+</ul></li>
+</ul>
 
-<p>test</p>
+</article></slide><slide class=""><hgroup><h2>Expected Yards After Fielding (xYAF)</h2></hgroup><article  id="expected-yards-after-fielding-xyaf">
 
-</article></slide><slide class=""><hgroup><h2>slide 3</h2></hgroup><article  id="slide-3">
+<ul>
+<li><p>Given the current conditions when fielding a punt, how many yards do we expect the punt returner to gain</p></li>
+<li><p>Takes into account</p>
 
-<p>test</p></article></slide>
+<ul>
+<li>Punt position</li>
+<li>Fielding position</li>
+<li>All defender positions (relative)</li>
+<li>Punt hang time</li>
+</ul></li>
+<li><p>Should return an accurate estimate of how many yards the player gains based on these factors</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Data</h2></hgroup><article  id="data">
+
+<ul>
+<li>NFL 2022 Big Data Bowl
+
+<ul>
+<li>&ldquo;The annual sports analytics contest from NFL Football Operations challenges members of the analytics community to contribute to the NFL’s continuing evolution of the use of advanced analytics.&rdquo;</li>
+<li>Last year’s winner: &ldquo;A Defensive Player Coverage Evaluation Framework&rdquo;\(^{[3]}\)</li>
+<li>This year, focuses on Special Teams Plays</li>
+<li>Contains 19,979 plays from 2018 to 2020</li>
+</ul></li>
+<li>After filtering, we predict based on ~2000 returned punts</li>
+</ul>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Model Set 1 - Mikey</h2></hgroup><article  id="model-set-1---mikey">
+
+</article></slide><slide class=""><hgroup><h2>slide</h2></hgroup><article  id="slide">
+
+<p>text here</p>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Model Set 2 - Kilbourne</h2></hgroup><article  id="model-set-2---kilbourne">
+
+</article></slide><slide class=""><hgroup><h2>slide</h2></hgroup><article  id="slide-1">
+
+<p>text here</p>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Evaluation and Conclusion</h2></hgroup><article  id="evaluation-and-conclusion">
+
+</article></slide><slide class=""><hgroup><h2>Model Uses</h2></hgroup><article  id="model-uses">
+
+<p>text here</p>
+
+</article></slide><slide class=""><hgroup><h2>Examples</h2></hgroup><article  id="examples">
+
+</article></slide><slide class=""><hgroup><h2>Works Cited</h2></hgroup><article  id="works-cited">
+
+<p>[1] Sam Green. Assessing the performance of Premier League goalscorers. Stats Perform, 2012.</p>
+
+<p>[2] <a href='https://grantland.com/features/expected-value-possession-nba-analytics/' title=''>https://grantland.com/features/expected-value-possession-nba-analytics/</a></p>
+
+<p>[3] <a href='https://www.nfl.com/news/next-gen-stats-intro-to-expected-yards-after-catch-0ap3000000983644' title=''>https://www.nfl.com/news/next-gen-stats-intro-to-expected-yards-after-catch-0ap3000000983644</a></p>
+
+<p>[4] Peng et. al., A Defensive Player Coverage Evaluation Framework, <a href='https://www.kaggle.com/model284/a-defensive-player-coverage-evaluation-framework' title=''>https://www.kaggle.com/model284/a-defensive-player-coverage-evaluation-framework</a></p></article></slide>
 
 
   <slide class="backdrop"></slide>

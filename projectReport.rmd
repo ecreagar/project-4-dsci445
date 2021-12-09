@@ -1,8 +1,11 @@
 ---
-title: "xYAF: A metric to evaluate punt returns in the NFL"
+title: 'xYAF: A metric to evaluate punt returns in the NFL'
 author: "Ethan, Kilbourne, Michael"
 date: "12/7/2021"
-output: ioslides_presentation
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+  beamer_presentation: default
 ---
 
 ```{r setup, include=FALSE}
@@ -26,9 +29,7 @@ library(e1071)
 
 ```
 
-# Introduction - Ethan
-
-## "Expected" metrics
+## Background - "Expected" metrics
 
 - In sports analytics, "expected" metrics are used to evaluate player or team performance
   - Soccer: Expected goals (xG) $^{[1]}$, expected assists, expected points
@@ -53,8 +54,10 @@ library(e1071)
 
 ## Data
 
-- NFL 2022 Big Data Bowl 
-  - Focuses on Special Teams Plays
+- NFL 2022 Big Data Bowl
+  - "The annual sports analytics contest from NFL Football Operations challenges members of the analytics community to contribute to the NFL’s continuing evolution of the use of advanced analytics."
+  - Last year's winner: "A Defensive Player Coverage Evaluation Framework"$^{[3]}$
+  - This year, focuses on Special Teams Plays
   - Contains 19,979 plays from 2018 to 2020
   
 - After filtering, we predict based on ~2000 returned punts
@@ -98,11 +101,19 @@ text here
 
 table here
 
-# evaluation and conclusion - Ethan
+# Evaluation and Conclusion
 
-## slide
+## Model Evaluation
 
 text here
+
+## Examples
+
+![An 85 yard punt return by Diontae Johnson](https://media.giphy.com/media/eelOXCc4Xj3QuVP9mz/giphy-downsized-large.gif)
+
+## Examples
+
+![A 2 yard punt return by Richie James Jr.](https://media.giphy.com/media/HdE4nMCU1kqKJm3cX6/giphy-downsized-large.gif)
 
 ## Works Cited
 
@@ -112,3 +123,5 @@ Perform, 2012.
 [2] https://grantland.com/features/expected-value-possession-nba-analytics/
 
 [3] https://www.nfl.com/news/next-gen-stats-intro-to-expected-yards-after-catch-0ap3000000983644
+
+[4] Peng et. al., A Defensive Player Coverage Evaluation Framework, https://www.kaggle.com/model284/a-defensive-player-coverage-evaluation-framework
