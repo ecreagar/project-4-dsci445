@@ -63,17 +63,43 @@ library(e1071)
 - After filtering, we predict based on ~2000 returned punts
 
 
-# Model Set 1 - Mikey
+# Model Evaluations
 
-## slide
+## Linear Regression
+
+text here
+
+## Logistic Regression
+
+text here 
+
+## Best Subset Selection (Forward, Backward)
 
 text here
 
-# Model Set 2 - Kilbourne
-
-## slide 
+## LASSO
 
 text here
+
+## Ridge Regression
+
+text here
+
+## GAMs
+
+text here
+
+## Trees
+
+text here
+
+## Random Forests (* still not working atm)
+
+text here
+
+## Model Comparison
+
+table here
 
 # Evaluation and Conclusion
 

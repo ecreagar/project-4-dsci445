@@ -23,6 +23,7 @@ library(tree)
 library(gbm)
 library(randomForest)
 library(e1071)
+library(splines)
 ```
 
 ```{r}
@@ -49,16 +50,40 @@ for (i in 1:length(colList)){
 }
 
 puntinfo[9:30] <- sapply(puntinfo[9:30], as.numeric)
-drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y")
+drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y", "playDirection")
 puntinfo <- puntinfo[,!(names(puntinfo) %in% drop)]
-# puntinfo <- puntinfo[-4]
 ```
 
 ```{r}
-sample <- createDataPartition(puntinfo$yards_gained, p = 0.6, list = FALSE)
+noPlayerList = c("hangTime", "playDirection", "punt_position_x", "punt_position_y", "field_position_x", "field_position_y", "yards_gained")
 
-train <- puntinfo[sample,]
-test <- puntinfo[-sample,]
+awayPlayerList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11")
+
+homePlayerList = c("home_player_1", "home_player_2", "home_player_3", "home_player_4", "home_player_5", "home_player_6", "home_player_7", "home_player_8", "home_player_9", "home_player_10", "home_player_11")
+
+noPlayerDF = puntinfo[, (names(puntinfo) %in% noPlayerList)]
+awayPlayerDF = puntinfo[, (names(puntinfo) %in% awayPlayerList)]
+homePlayerDF = puntinfo[, (names(puntinfo) %in% homePlayerList)]
+
+playerSorted = data.frame(matrix(ncol = 22, nrow=0))
+colnames(playerSorted) = colList
+
+for (i in 1:nrow(awayPlayerDF)){
+  tempRowAway = sort(unlist(awayPlayerDF[i,], use.names = FALSE))
+  tempRowHome = sort(unlist(homePlayerDF[i,], use.names = FALSE))
+  tempRow = append(tempRowAway, tempRowHome)
+  playerSorted[nrow(playerSorted)+1,] = tempRow
+}
+
+puntSorted = cbind(noPlayerDF, playerSorted)
+```
+
+
+```{r}
+sample <- createDataPartition(puntSorted$yards_gained, p = 0.6, list = FALSE)
+
+train <- puntSorted[sample,]
+test <- puntSorted[-sample,]
 
 xtrain <- model.matrix(yards_gained~., train)[,-1]
 xtest <- model.matrix(yards_gained~., test)[,-1]
@@ -66,6 +91,7 @@ xtest <- model.matrix(yards_gained~., test)[,-1]
 
 
 ```{r}
+# Linear Model
 testLm <- lm(yards_gained ~ ., data = train)
 
 summary(testLm)
@@ -76,21 +102,22 @@ pred <- predict(testLm, test)
 
 predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
 
-head(predTable)
-
 ggplot(predTable, aes(x = actuals, y = predicted)) +
   geom_point() +
-  geom_smooth(method='lm', formula = y~x)
+  geom_smooth(method='lm', formula = y~x) +
+  geom_abline(color = 'red')
 ```
 
 
 ```{r}
+# Logistic Regression
 logitModel <- glm(yards_gained ~ ., data = train)
 
 summary(logitModel)
 ```
 
 ```{r}
+# Best subset selection
 subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 20, method = "backward")
 
 ggplot() +
@@ -99,26 +126,62 @@ ggplot() +
     ylab("AdjR2") +
     xlab("Size of Subset")
 
-summary(subsetMod)
+subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 20, method = "forward")
+
+ggplot() +
+    geom_point(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) + 
+    geom_line(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) +
+    ylab("AdjR2") +
+    xlab("Size of Subset")
 ```
 
 ```{r}
-# Issue when removing columns
-lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 1, nfolds = 10)
+# Lasso
+lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 1, nfolds = 10)
 
 pred <- predict(lassoMod, s = lassoMod$lambda.min, newx = xtest)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, pred=pred))
+
+ggplot(predTable, aes(x = actuals, y = pred)) +
+  geom_point() +
+  geom_abline(color = 'blue')
+```
+
+```{r}
+# Ridge Regression
+lambda <- 10^seq(-2, 10, length.out = 100)
+ridgeMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 0, lambda = lambda)
+ridgePred = predict(ridgeMod, xtest, s=ridgeMod$lambda.min)
+mean((ridgePred - test$yards_gained)^2)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, pred=ridgePred))
+
+ggplot(predTable, aes(x = actuals, y = pred)) +
+  geom_point() +
+  geom_abline(color = 'blue')
+```
+
+
+```{r}
+# GAMs
+gamMod <- gam(yards_gained ~ ., data = train)
+summary(gamMod)
+
+pred <- predict(gamMod, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_smooth(method='gam', formula = y~x) +
+  geom_abline(color = 'red')
+
 mean((pred - test$yards_gained)^2)
 ```
 
 ```{r}
-gamMod <- gam(yards_gained ~ ., data = train)
-summary(gamMod)
-
-
-plot(x = puntinfo$away_player_4, y = puntinfo$yards_gained)
-```
-
-```{r}
+# Trees
 treeModel <- tree(yards_gained ~., data = train)
 summary(treeModel)
 plot(treeModel)
@@ -126,8 +189,14 @@ text(treeModel)
 ```
 
 
+```{r}
+# Random Forest
+forestMod <- randomForest(yards_gained ~ ., data = train, importance = TRUE, na.action = na.pass)
+
+```
 
 
+```{r}
 
-
+```
 
