@@ -122,8 +122,10 @@ ggplot(predTable, aes(x = actuals, y = predicted)) +
 ```{r}
 # Logistic Regression
 logitModel <- glm(yards_gained ~ ., data = train)
-
 summary(logitModel)
+
+preds <- predict(logitModel, test)
+mean((preds - test[,'yards_gained'])^2)
 ```
 
 ```{r}
@@ -208,9 +210,12 @@ text(treeModel)
 
 
 ```{r}
-# Random Forest
-forestMod <- randomForest(yards_gained ~ ., data = train, importance = TRUE, na.action = na.pass)
+# Boosted Model
+boostMod <- gbm(yards_gained~., data = train, distribution = 'gaussian', shrinkage = 0.01, n.trees=1000)
 
+pred.boost=predict(boostMod, test, n.trees=1000)
+MSE.boost <- mean((pred.boost - test[,'yards_gained'])^2)
+MSE.boost
 ```
 
 
