@@ -67,39 +67,84 @@ library(e1071)
 
 ## Linear Regression
 
-text here
+![](Images/QQLM.png){width=80%}
+
+## Linear Regression
+
+![](Images/LMMod1.png){width=80%}
+![](Images/LMMod2.png){width=80%}
+![](Images/LMMod3.png){width=80%}
+
+## Linear Regression
+
+![](Images/ResidualsFittedLM.png){width=80%}
+
 
 ## Logistic Regression
 
-text here 
+![](Images/LogitMod1.png){width=80%}
+![](Images/LogitMod2.png){width=80%}
+![](Images/LogitMod3.png){width=80%}
 
 ## Best Subset Selection (Forward, Backward)
 
-text here
+![Forward Subset Selection](Images/AdjR2Forward.png){width=80%}
 
-## LASSO
+## Best Subset Selection (Forward, Backward)
 
-text here
+![Forward Variable Selection](Images/ForwardVariables.png){width=80%}
 
-## Ridge Regression
+## Best Subset Selection (Forward, Backward)
 
-text here
+![Forward Variable Selection](Images/ForwardVars.png){width=80%}
+
+## Best Subset Selection (Forward, Backward)
+
+![Backward](Images/AdjR2Backward.png){width=80%}
+
+## Best Subset Selection (Forward, Backward)
+
+![Backward Variable Selection](Images/BackwardVariables.png){width=80%}
+
+## Best Subset Selection (Forward, Backward)
+
+![Backward Variable Selection](Images/BackwardVars.png){width=80%}
+
+## Random Forests
+
+![](Images/Tree.png){width=80%}
+
+## Random Forests
+
+![](Images/ActPredForest.png){width=80%}
+
+## Random Forests
+
+![](Images/ForestMod.png){width=80%}
+
+## LASSO/Ridge Regression
+
+![Actual vs Predicted Lasso](Images/ActPredLasso.png){width=80%}
 
 ## GAMs
 
-text here
+![GAM Model](Images/GAMMod.png){width=60%}
 
-## Trees
+## GAM
 
-text here
+![Actual vs Predicted](Images/ActPredGam.png){width=80%}
 
-## Random Forests (* still not working atm)
+## Splines
 
-text here
+![Actual vs Predicted](Images/ActPredSpline.png){width=80%}
+
+## Boosting
+
+![Actual vs Predicted](Images/ActPredBoost.png){width=80%}
 
 ## Model Comparison
 
-table here
+![MSEs](Images/ModelComparison.png)
 
 # Evaluation and Conclusion
 

@@ -34,11 +34,6 @@ library(splines)
 puntinfo = read.csv("Data/puntinfo.csv")
 # Get rid of NA row
 puntinfo <- na.omit(puntinfo)
-
-# Remove outliers
-out <- boxplot.stats(puntinfo$yards_gained)$out
-out_ind <- which(puntinfo$yards_gained %in% c(out))
-puntinfo <- puntinfo[-out_ind,]
 ```
 
 ```{r}
@@ -64,7 +59,7 @@ puntinfo[9:30] <- sapply(puntinfo[9:30], as.numeric)
 ```
 
 ```{r}
-noPlayerList = c("hangTime", "playDirection", "punt_position_x", "punt_position_y", "field_position_x", "field_position_y", "yards_gained")
+noPlayerList = c("gameId", "playId", "hangTime", "playDirection", "punt_position_x", "punt_position_y", "field_position_x", "field_position_y", "yards_gained")
 
 awayPlayerList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11")
 
@@ -95,8 +90,11 @@ for (i in 1:nrow(awayPlayerDF)){
 }
 
 puntSorted = cbind(noPlayerDF, playerSorted)
-# Store gameIds and playIds for specific analysis
-puntinfo = puntSorted
+
+# Remove outliers
+out <- boxplot.stats(puntSorted$yards_gained)$out
+out_ind <- which(puntSorted$yards_gained %in% c(out))
+puntSorted <- puntSorted[-out_ind,]
 ```
 
 
@@ -222,10 +220,6 @@ ggplot(predTable, aes(x = actuals, y = pred)) +
   geom_abline(color = 'blue')
 
 ridgeMSE <- mean((ridgePred - test$yards_gained)^2)
-
-# Specific predictions
-which(puntinfo$gameId == 2019111100 & puntinfo$playId == 904)
-which(puntinfo$gameId == 2019120810)
 ```
 
 
@@ -251,6 +245,12 @@ splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + 
 
 splinePred <- predict(splineMod, test)
 
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=splinePred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
+
 splineMSE <- mean((splinePred - test$yards_gained)^2)
 ```
 
@@ -272,6 +272,11 @@ forestMod <- randomForest(x = xtrain, y = ytrain, data = train, importance = TRU
 forestMod
 pred <- predict(forestMod, test)
 forestMSE <- mean((pred - test$yards_gained)^2)
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
 ```
 
 ```{r}
@@ -281,6 +286,11 @@ predSVM <- predict(svmMod, test)
 
 svmMSE <- mean((predSVM - test$yards_gained)^2)
 
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=predSVM))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
 ```
 
 ```{r}
@@ -289,8 +299,25 @@ boostMod <- gbm(yards_gained~., data = train, distribution = 'gaussian', shrinka
 
 pred.boost=predict(boostMod, test, n.trees=1000)
 MSE.boost <- mean((pred.boost - test[,'yards_gained'])^2)
-MSE.boost
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred.boost))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
 ```
+
+```{r}
+# Specific predictions
+drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y", "playDirection", "yards_gained")
+specificPredict1 <- puntinfo[which(puntinfo$gameId == 2019111100 & puntinfo$playId == 904), ]
+specificPredict1 <- as.matrix(specificPredict1[,!names(specificPredict1) %in% drop])
+print(predict(ridgeMod, specificPredict1))
+
+
+which(puntinfo$gameId == 2019120810)
+```
+
 
 
 ```{r}
