@@ -251,6 +251,12 @@ splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + 
 
 splinePred <- predict(splineMod, test)
 
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=splinePred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
+
 splineMSE <- mean((splinePred - test$yards_gained)^2)
 ```
 
@@ -272,6 +278,11 @@ forestMod <- randomForest(x = xtrain, y = ytrain, data = train, importance = TRU
 forestMod
 pred <- predict(forestMod, test)
 forestMSE <- mean((pred - test$yards_gained)^2)
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
 ```
 
 ```{r}
@@ -281,6 +292,11 @@ predSVM <- predict(svmMod, test)
 
 svmMSE <- mean((predSVM - test$yards_gained)^2)
 
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=predSVM))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
 ```
 
 ```{r}
@@ -289,7 +305,12 @@ boostMod <- gbm(yards_gained~., data = train, distribution = 'gaussian', shrinka
 
 pred.boost=predict(boostMod, test, n.trees=1000)
 MSE.boost <- mean((pred.boost - test[,'yards_gained'])^2)
-MSE.boost
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred.boost))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
 ```
 
 
