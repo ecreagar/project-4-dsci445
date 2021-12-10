@@ -34,6 +34,9 @@ library(splines)
 puntinfo = read.csv("Data/puntinfo.csv")
 # puntinfo$hangTime[is.na(puntinfo$hangTime)] <- mean(puntinfo$hangTime, na.rm=TRUE)
 puntinfo <- na.omit(puntinfo)
+out <- boxplot.stats(puntinfo$yards_gained)$out
+out_ind <- which(puntinfo$yards_gained %in% c(out))
+puntinfo <- puntinfo[-out_ind,]
 ```
 
 ```{r}
