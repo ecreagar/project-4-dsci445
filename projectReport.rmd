@@ -190,9 +190,13 @@ Better, but also doesn't handle negative values.
 
 ![An 85 yard punt return by Diontae Johnson](https://media.giphy.com/media/eelOXCc4Xj3QuVP9mz/giphy-downsized-large.gif)
 
+Prediction: 4.73 yards
+
 ## Examples
 
 ![A 2 yard punt return by Richie James Jr.](https://media.giphy.com/media/HdE4nMCU1kqKJm3cX6/giphy-downsized-large.gif)
+
+Model prediction: 2.3 yards
 
 ## Works Cited
 
