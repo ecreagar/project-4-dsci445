@@ -103,9 +103,43 @@ table here
 
 # Evaluation and Conclusion
 
-## Model Evaluation
+## Evaluation
 
-text here
+Problem: Some methods assume normally distributed data
+
+```{r, echo = FALSE, message = FALSE}
+data = read.csv("Data/puntinfo.csv")
+n <- ggplot(data = data, aes(x = yards_gained, fill = ..x..)) + 
+  geom_histogram(bins=100) + 
+  scale_fill_gradient2(low='darkblue', mid='blue', high='lightblue', midpoint=-5, name = 'Yards Gained')
+
+suppressWarnings(print(n))
+```
+
+## Evaluation
+
+Possible solution: Variable Transforms
+
+```{r, echo = FALSE, message = FALSE}
+l <- ggplot(data = data, aes(x = log(yards_gained), fill = ..x..)) + 
+  geom_histogram(bins=100) + 
+  scale_fill_gradient2(low='darkblue', mid='blue', high='lightblue', midpoint=0, name = 'Yards Gained')
+
+suppressWarnings(print(l))
+```
+
+## Evaluation
+
+
+```{r, echo = FALSE, message=FALSE}
+l <- ggplot(data = data, aes(x = sqrt(yards_gained), fill = ..x..)) + 
+  geom_histogram(bins=100) + 
+  scale_fill_gradient2(low='darkblue', mid='blue', high='lightblue', midpoint=0, name = 'Yards Gained')
+
+suppressWarnings(print(l))
+```
+
+Better, but also doesn't handle negative values.
 
 ## Examples
 
@@ -117,8 +151,7 @@ text here
 
 ## Works Cited
 
-[1] Sam Green. Assessing the performance of Premier League goalscorers. Stats
-Perform, 2012.
+[1] Sam Green. Assessing the performance of Premier League goalscorers. Stats Perform, 2012.
 
 [2] https://grantland.com/features/expected-value-possession-nba-analytics/
 

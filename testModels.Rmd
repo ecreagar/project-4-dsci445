@@ -278,8 +278,17 @@ svmMod <- svm(yards_gained ~ ., data = train)
 predSVM <- predict(svmMod, test)
 
 svmMSE <- mean((predSVM - test$yards_gained)^2)
+
 ```
 
+```{r}
+# Boosted Model
+boostMod <- gbm(yards_gained~., data = train, distribution = 'gaussian', shrinkage = 0.01, n.trees=1000)
+
+pred.boost=predict(boostMod, test, n.trees=1000)
+MSE.boost <- mean((pred.boost - test[,'yards_gained'])^2)
+MSE.boost
+```
 
 
 ```{r}
@@ -287,4 +296,6 @@ svmMSE <- mean((predSVM - test$yards_gained)^2)
 mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE, "Random_Forest"=forestMSE, "Best_Subset"=bestSubsetMSE))
 print(mseTable)
 ```
+
+
 
