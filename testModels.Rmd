@@ -1,6 +1,8 @@
 ---
 title: "TestModels"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -30,6 +32,8 @@ library(splines)
 
 ```{r}
 puntinfo = read.csv("Data/puntinfo.csv")
+# puntinfo$hangTime[is.na(puntinfo$hangTime)] <- mean(puntinfo$hangTime, na.rm=TRUE)
+puntinfo <- na.omit(puntinfo)
 ```
 
 ```{r}
@@ -99,8 +103,12 @@ sample <- createDataPartition(puntSorted$yards_gained, p = 0.8, list = FALSE)
 train <- puntSorted[sample,]
 test <- puntSorted[-sample,]
 
-xtrain <- model.matrix(yards_gained~., train)[,-1]
-xtest <- model.matrix(yards_gained~., test)[,-1]
+xtrain <- as.matrix(subset(train, select=-c(yards_gained)))
+xtest <- as.matrix(subset(test, select=-c(yards_gained)))
+ytrain <- as.matrix(subset(train, select=c(yards_gained)))
+ytest <- as.matrix(subset(test, select=c(yards_gained)))
+# xtrain <- model.matrix(yards_gained~., train)[,-1]
+# xtest <- model.matrix(yards_gained~., test)[,-1]
 ```
 
 
@@ -137,7 +145,7 @@ logitMSE <- mean((pred - test$yards_gained)^2)
 
 ```{r}
 # Best subset selection
-subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 20, method = "backward")
+subsetMod <- regsubsets(yards_gained ~ ., data = train, nvmax = 20, method = "backward")
 
 ggplot() +
     geom_point(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) + 
@@ -150,7 +158,7 @@ coef(subsetMod, 16)
 plot(subsetMod, scale = "adjr2")
 
 
-subsetMod <- regsubsets(yards_gained ~ ., data = puntinfo[,!(names(puntinfo) %in% drop)], nvmax = 20, method = "forward")
+subsetMod <- regsubsets(yards_gained ~ ., data = train, nvmax = 20, method = "forward")
 
 ggplot() +
     geom_point(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) + 
@@ -162,11 +170,28 @@ ggplot() +
 which.max(summary(subsetMod)$adjr2)
 coef(subsetMod, 16)
 plot(subsetMod, scale = "adjr2")
+
+bestSubsetMod <- lm(yards_gained ~ hangTime + punt_position_x + field_position_x + receiving_player_1 + receiving_player_3 + receiving_player_4 + receiving_player_5 + receiving_player_6 + receiving_player_10 + receiving_player_11 + punting_player_1 + punting_player_2 + punting_player_3 + punting_player_7 + punting_player_9 + punting_player_10, data = train)
+
+summary(bestSubsetMod)
+
+pred <- predict(bestSubsetMod, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_smooth(method='lm', formula = y~x) +
+  geom_abline(color = 'red')
+
+
+bestSubsetMSE <- mean((pred - test$yards_gained)^2)
+
 ```
 
 ```{r}
 # Lasso
-lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 1, nfolds = 10)
+lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 1, nfolds = 10)
 
 pred <- predict(lassoMod, s = lassoMod$lambda.min, newx = xtest)
 
@@ -182,7 +207,7 @@ lassoMSE <- mean((pred - test$yards_gained)^2)
 ```{r}
 # Ridge Regression
 lambda <- 10^seq(-2, 10, length.out = 100)
-ridgeMod <- cv.glmnet(x = xtrain, y = train$yards_gained[1:nrow(train)-1], alpha = 0, lambda = lambda)
+ridgeMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 0, lambda = lambda)
 ridgePred = predict(ridgeMod, xtest, s=ridgeMod$lambda.min)
 
 predTable <- data.frame(cbind(actuals=test$yards_gained, pred=ridgePred))
@@ -192,6 +217,10 @@ ggplot(predTable, aes(x = actuals, y = pred)) +
   geom_abline(color = 'blue')
 
 ridgeMSE <- mean((ridgePred - test$yards_gained)^2)
+
+# Specific predictions
+which(puntinfo$gameId == 2019111100 & puntinfo$playId == 904)
+which(puntinfo$gameId == 2019120810)
 ```
 
 
@@ -215,7 +244,7 @@ gamMSE <- mean((pred - test$yards_gained)^2)
 ```{r}
 splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + ns(punt_position_y, df=6) + ns(field_position_x, df=6) + ns(field_position_y, df=6) + ns(receiving_player_1, df=6)+ ns(receiving_player_2, df=6)+ ns(receiving_player_3, df=6)+ ns(receiving_player_4, df=6)+ ns(receiving_player_5, df=6)+ ns(receiving_player_6, df=6)+ ns(receiving_player_7, df=6)+ ns(receiving_player_8, df=6)+ ns(receiving_player_1, df=9)+ ns(receiving_player_10, df=6)+ ns(receiving_player_11, df=6)+ ns(punting_player_1, df=6)+ ns(punting_player_2, df=6)+ ns(punting_player_3, df=6)+ ns(punting_player_4, df=6)+ ns(punting_player_5, df=6)+ ns(punting_player_6, df=6)+ ns(punting_player_7, df=6)+ ns(punting_player_8, df=6)+ ns(punting_player_10, df=6)+ ns(punting_player_11, df=6), data=train)
 
-splinePred <- predict(testLm, test)
+splinePred <- predict(splineMod, test)
 
 splineMSE <- mean((splinePred - test$yards_gained)^2)
 ```
@@ -234,7 +263,7 @@ treeMSE <- mean((pred - test$yards_gained)^2)
 
 ```{r}
 # Random Forest
-forestMod <- randomForest(yards_gained ~ ., data = train, importance = TRUE, ntree = 1000)
+forestMod <- randomForest(x = xtrain, y = ytrain, data = train, importance = TRUE, ntree = 1000)
 forestMod
 pred <- predict(forestMod, test)
 forestMSE <- mean((pred - test$yards_gained)^2)
@@ -252,7 +281,7 @@ svmMSE <- mean((predSVM - test$yards_gained)^2)
 
 ```{r}
 # Analysis
-mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE))
+mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE, "Random_Forest"=forestMSE, "Best_Subset"=bestSubsetMSE))
 print(mseTable)
 ```
 
