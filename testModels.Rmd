@@ -32,8 +32,10 @@ library(splines)
 
 ```{r}
 puntinfo = read.csv("Data/puntinfo.csv")
-# puntinfo$hangTime[is.na(puntinfo$hangTime)] <- mean(puntinfo$hangTime, na.rm=TRUE)
+# Get rid of NA row
 puntinfo <- na.omit(puntinfo)
+
+# Remove outliers
 out <- boxplot.stats(puntinfo$yards_gained)$out
 out_ind <- which(puntinfo$yards_gained %in% c(out))
 puntinfo <- puntinfo[-out_ind,]
@@ -293,7 +295,7 @@ MSE.boost
 
 ```{r}
 # Analysis
-mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE, "Random_Forest"=forestMSE, "Best_Subset"=bestSubsetMSE))
+mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE, "Random_Forest"=forestMSE, "Best_Subset"=bestSubsetMSE, "Boosting"=MSE.boost))
 print(mseTable)
 ```
 
