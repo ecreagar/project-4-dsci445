@@ -3,8 +3,8 @@ title: 'xYAF: A metric to evaluate punt returns in the NFL'
 author: "Ethan, Kilbourne, Michael"
 date: "12/7/2021"
 output:
-  ioslides_presentation: default
   slidy_presentation: default
+  ioslides_presentation: default
   beamer_presentation: default
 ---
 
@@ -189,10 +189,12 @@ Better, but also doesn't handle negative values.
 ## Examples
 
 ![An 85 yard punt return by Diontae Johnson](https://media.giphy.com/media/eelOXCc4Xj3QuVP9mz/giphy-downsized-large.gif)
+Predicted: 4.78 yards
 
 ## Examples
 
 ![A 2 yard punt return by Richie James Jr.](https://media.giphy.com/media/HdE4nMCU1kqKJm3cX6/giphy-downsized-large.gif)
+Predicted: 1.52 yards
 
 ## Works Cited
 
