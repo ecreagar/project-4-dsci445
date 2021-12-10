@@ -3,8 +3,8 @@ title: 'xYAF: A metric to evaluate punt returns in the NFL'
 author: "Ethan, Kilbourne, Michael"
 date: "12/7/2021"
 output:
-  ioslides_presentation: default
   slidy_presentation: default
+  ioslides_presentation: default
   beamer_presentation: default
 ---
 
