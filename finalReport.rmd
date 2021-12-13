@@ -2,7 +2,10 @@
 title: "Final Report"
 author: "Ethan, Kilbourne, Michael"
 date: "12/13/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,5 +13,44 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # xYAF: A Metric for Evaluating Punt Returns
+
+## Part 1: Motivation
+
+Every year, the NFL hosts its annual Big Data bowl $^{[1]}$, in which members of the analytics community are able to submit ideas for new metrics, methods of quantifying performance, and other analytical measures that allow the football community to better understand the game from a data-driven perspective. As part of the 2022 NFL Big Data Bowl, which focused on special teams plays, we designed and implemented a new metric called xYAF, short for expected yards after fielding. Using this metric, we hope to provide a method for quantifying the effectiveness of punt returners against a neutral baseline, as well as examine the circumstances of a specific return.
+
+In the creation of our metric, we took inspiration from the recent trend of "expected" statistics in sports analytics. There are many popular examples of these metrics, including expected goals $^{[2]}$ and expected assists in soccer, expected possession value in basketball $^{[3]}$, and expected yards after catch in football $^{[4]}$. Though these metrics span across many sports and parts of each sport, they generally share a common goal: providing an objective baseline to evaluate their part of the sport. By making a prediction for an event based on what has happened in the past given similar circumstances, we are able to understand the situation in an objective way.
+
+Our xYAF metric, like other expected metrics, will take into account the current game state to attempt to accurately predict the number of yards gained by a punt returner. We will use all of the relevant information possible to make our prediction, including the location of the punt, location that the punt was fielded, locations of all of the kicking team and receiving team's players at the time of the catch, and the hang time of the punt. By accounting for all of these factors and creating a prediction, we hope to provide a neutral baseline for evaluation of punt returners as well as individual returns. 
+
+We hope to create a method for evaluating returns which is better than any naïve method of examining returns or returners, such as looking at raw average return yards for a returner. Though this may seem like a good way of evaluating a returner, the nature of sports is such that many factors may cause an individual or team to perform better in certain areas, like a punt return. If we were to use raw yards gained as a proxy for returner ability, we would be ignoring important factors that affect a punt return. For example, when a team punts the ball from further into their own half of the field, the punter would likely punt the ball as far as possible, as they the team would be trying to gain as many yards with the punt as they could. However, when punting the ball in the opponent's own half, the punter might try to punt the ball a fewer number of yards to "pin" the team close to their own end zone and avoid a touchback. For this reason, if a punt returner plays on a team with a better defense, who stops the opponent deeper into their own side of the field, they will likely be receiving the ball further away from the location for the punt more often than a punt returner on a team with a poor defense. This will mean that the punting team has further to run to tackle the punt returner, allowing the returner to gain more yards on average as a result. This is an example of a factor of a punt return that is not in the hands of the returner, and should therefore not influence his reputation as a returner. By providing a baseline of punt distance, defender locations when the ball is caught, and blocker positions, our model will predict more yards after fielding in the case of a longer punt where the returning team is further away from the returner when the ball is caught, and fewer yards in the case of a short punt with nearby defenders. We can then evaluate both of these punt returners to be evaluated fairly according to this baseline.
+
+Our dataset creation requires a large amount of data cleanup. The data originally comes in several files containing the tracking data as well as list of plays over the 2018, 2019, and 2020 NFL seasons. The tracking data originally contains location, direction, and other information for each player at each frame relevant to a special teams play. Since there are about 20,000 plays with 22 players each, and each play contains roughly 50 frames, we are have $20000 * 22 * 50 = 22,000,000$ rows to start with between the three tracking data files. After trimming only the returned punts from the data and combining information about each punt, field, and tackle frame to retain only relevant information, we are left with about 2,000 punts to predict with. 
+
+
+## Part 2: Methodology
+
+We should talk about models used, feature engineering we had to do, and dropping outliers.
+
+## Part 3: Results
+
+Results with and without outliers, which model ended up working the best, and fine tuning that model further with CV in order to get the minimum possible MSE (translate to yards as well).
+
+## Part 4: Conclusion
+
+- Final model evaluated on specific punts as well as a list of returners by performance compared to xYAF
+- Problem difficulties (skewed distribution, sometimes accurate predictions aren't even desired)
+- Future goals (usefulness, ideas to improve accuracy).
+  - something that would be cool for the future is a confidence metric that we could model likelihood on. For example, if a returner got 30 yards on a punt where 5 was expected, we could look at the likelihood of that return happening.
+- might there be a better error metric? Something like SMAPE (symmetric mean average percentage error) might work well, so that a prediction 5 yards off on a short punt return is punished more harshly than 5 yards off on a larger punt return.
+
+## Works Cited
+
+[1] https://operations.nfl.com/gameday/analytics/big-data-bowl/
+
+[2] Sam Green. Assessing the performance of Premier League goalscorers. Stats Perform, 2012.
+
+[3] https://grantland.com/features/expected-value-possession-nba-analytics/
+
+[4] https://www.nfl.com/news/next-gen-stats-intro-to-expected-yards-after-catch-0ap3000000983644
 
 
