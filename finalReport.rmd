@@ -63,7 +63,14 @@ Results with and without outliers, which model ended up working the best, and fi
 - Problem difficulties (skewed distribution, sometimes accurate predictions aren't even desired)
 - Future goals (usefulness, ideas to improve accuracy).
   - something that would be cool for the future is a confidence metric that we could model likelihood on. For example, if a returner got 30 yards on a punt where 5 was expected, we could look at the likelihood of that return happening.
-- might there be a better error metric? Something like SMAPE (symmetric mean average percentage error) might work well, so that a prediction 5 yards off on a short punt return is punished more harshly than 5 yards off on a larger punt return.
+  - Further feature engineering (flip directions)
+  - might there be a better error metric? Something like SMAPE (symmetric mean average percentage error) might work well, so that a prediction 5 yards off on a short punt return is punished more harshly than 5 yards off on a larger punt return.
+
+### Challenges and Solutions
+
+
+
+### Applications
 
 To evaluate the effectiveness and demonstrate the usefulness of our model, we can apply it to both individual punts as well as evaluate punt returners based on their consistent performance against our predictions. We will first apply the model to individual punt returns, where we will demonstrate how the model would be used in such a case.
 
@@ -77,12 +84,7 @@ include_graphics(myimages)
 
 Out model considers all of the relevant information above for this return, and is able to make a very good prediction, predicting 1.52 yards, just 0.06 fewer than the actual return of 1.58 yards. This is an example of a fairly normal punt return, which is likely why our model is able to predict very well in this scenario.
 
-```{r, echo = FALSE, out.width="33.3%"}
-myimages<-list.files("Images/puntreturn1/", pattern = ".png", full.names = TRUE)
-include_graphics(myimages)
-```
-
-We can evaluate a second, less common punt return where our model struggles to make an accurate prediction. This return took place between the Pittsburgh Steelers and Arizona Cardinals in Week 14 of the 2019 season. The Cardinals punt from their own 15 yard line, and after a very long punt Diontae Johnson fields the punt at the Steelers 15 yard line. The closest defender is 11 yards away, but there are hardly any defenders nearby other than him and the Steelers have a blocker near this defender. Johnson is able to evade the entire defense, taking the punt back for an 85 yard touchdown.
+We will also evaluate a second, less common punt return where our model struggles to make an accurate prediction. This return took place between the Pittsburgh Steelers and Arizona Cardinals in Week 14 of the 2019 season. The Cardinals punt from their own 15 yard line, and after a very long punt Diontae Johnson fields the punt at the Steelers 15 yard line. The closest defender is 11 yards away, but there are hardly any defenders nearby other than him and the Steelers have a blocker near this defender. Johnson is able to evade the entire defense, taking the punt back for an 85 yard touchdown.
 
 
 ```{r, echo = FALSE, out.width="33.3%"}
@@ -96,32 +98,33 @@ Another use case for our model is evaluating many punts by many different return
 
 ```{r, echo = F}
 res <- read.csv('results_vs_expected.csv') %>% rename(avg_actual_minus_pred = avg_error, punts_returned = count)
-players <- read.csv('Data/players.csv') %>% rename(player = nflId)
+players <- read.csv('Data/players.csv') %>% rename(player = nflId, name = displayName)
 players$player = as.character(players$player)
 
 res <- res %>% left_join(players, by='player')
 
 res %>%
-  dplyr::select(displayName, avg_actual_minus_pred, punts_returned) %>%
+  dplyr::select(name, avg_actual_minus_pred, punts_returned) %>%
   filter(punts_returned >= 10) %>% 
   head(10) %>%
   kable()
 ```
 
-These 10 players consistency outperform their predicted yards after catch by the most. The best among them is DeAndre Carter, a Wide Receiver for the Washington Football Team. Carter averages 6.5 more yards per return than would be expected. Examining Carter's statistics, he averages about 9.4 yards per return over his NFL career $^{[5]}$, which is good but not outstanding. However, as mentioned in the Motivation section, we would expect a player who generally receives the ball with less space to average less return yards, and having less space results from the opponent having longer drives and punting the ball from further down the field which would imply that the returner played for a poor defense. In the 2018 and 2019 seasons where Carter made over 75% of his punt returns, Washington's defense ranked 17th and 27th respectively in yards allowed by opponents $^{[6}}$. These years were also Carter's best two seasons of returning, where he averaged 9.6 and 9.7 yards per game, respectively $^{[5]}$. This is a great example of the usefulness of xYAF, because while Carter's numbers may not be the highest in raw average return yards (Carter's Football Team ranked 25th and 32nd in these two seasons, respectively $^{[6]}$), he is a much better punt returner than those numbers show.
+These 10 players consistency outperform their predicted yards after catch by the most. The best among them is DeAndre Carter, a Wide Receiver for the Washington Football Team. Carter averages 6.5 more yards per return than would be expected. Examining Carter's statistics, he averages about 9.4 yards per return over his NFL career $^{[5]}$, which is good but not outstanding. However, as mentioned in the Motivation section, we would expect a player who generally receives the ball with less space to average less return yards, and having less space results from the opponent having longer drives and punting the ball from further down the field which would imply that the returner played for a poor defense. In the 2018 and 2019 seasons where Carter made over 75% of his punt returns, Washington's defense ranked 17th and 27th respectively in yards allowed by opponents $^{[6]}$. These years were also Carter's best two seasons of returning, where he averaged 9.6 and 9.7 yards per return, respectively $^{[5]}$. This is a great example of the usefulness of xYAF, because while Carter's numbers may not be the highest in raw average return yards (Carter's Football Team ranked 25th and 32nd in average punt return yards in these two seasons, respectively $^{[6]}$), he is a much better punt returner than those numbers show.
 
-Worst Returners:
+We can also view the returners that performed the worst against our projections.
 
 ```{r, echo = F}
 res %>%
-  dplyr::select(displayName, avg_actual_minus_pred, punts_returned) %>%
+  dplyr::select(name, avg_actual_minus_pred, punts_returned) %>%
   filter(punts_returned >= 10) %>% 
   tail(10) %>%
   kable()
 ```
 
+These players consistently performed poorly compared to their projections.
 
-
+### Future goals
 
 ## Works Cited
 
