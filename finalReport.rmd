@@ -10,7 +10,29 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+set.seed(445)
+
+# Installing a bunch of packages
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(ISLR)
+library(caret)
+library(MASS)
+library(class)
+library(knitr)
+library(leaps)
+library(glmnet)
+library(boot)
+library(gam)
+library(tree)
+library(gbm)
+library(randomForest)
+library(e1071)
+library(splines)
 ```
+
 
 # xYAF: A Metric for Evaluating Punt Returns
 
@@ -43,6 +65,62 @@ Results with and without outliers, which model ended up working the best, and fi
   - something that would be cool for the future is a confidence metric that we could model likelihood on. For example, if a returner got 30 yards on a punt where 5 was expected, we could look at the likelihood of that return happening.
 - might there be a better error metric? Something like SMAPE (symmetric mean average percentage error) might work well, so that a prediction 5 yards off on a short punt return is punished more harshly than 5 yards off on a larger punt return.
 
+To evaluate the effectiveness and demonstrate the usefulness of our model, we can apply it to both individual punts as well as evaluate punt returners based on their consistent performance against our predictions. We will first apply the model to individual punt returns, where we will demonstrate how the model would be used in such a case.
+
+The first punt return we will examine takes place between Seattle and San Francisco on November 11th, 2019. Seattle punts the ball from their own 25 yard line. The punt travels all the way to the opponent's 25 yard line before being fielded by Richie James Jr. of the 49ers. When James Jr. catches the ball, he has quite a few defenders close to him, the closest being 6 yards away, and three being fewer 10 yards away. James Jr. does not get very far, losing his balance and succumbing to the defense after only gaining 1.5 yards.
+
+
+```{r, echo = FALSE, out.width="33.3%"}
+myimages<-list.files("Images/puntreturn1/", pattern = ".png", full.names = TRUE)
+include_graphics(myimages)
+```
+
+Out model considers all of the relevant information above for this return, and is able to make a very good prediction, predicting 1.52 yards, just 0.06 fewer than the actual return of 1.58 yards. This is an example of a fairly normal punt return, which is likely why our model is able to predict very well in this scenario.
+
+```{r, echo = FALSE, out.width="33.3%"}
+myimages<-list.files("Images/puntreturn1/", pattern = ".png", full.names = TRUE)
+include_graphics(myimages)
+```
+
+We can evaluate a second, less common punt return where our model struggles to make an accurate prediction. This return took place between the Pittsburgh Steelers and Arizona Cardinals in Week 14 of the 2019 season. The Cardinals punt from their own 15 yard line, and after a very long punt Diontae Johnson fields the punt at the Steelers 15 yard line. The closest defender is 11 yards away, but there are hardly any defenders nearby other than him and the Steelers have a blocker near this defender. Johnson is able to evade the entire defense, taking the punt back for an 85 yard touchdown.
+
+
+```{r, echo = FALSE, out.width="33.3%"}
+myimages<-list.files("Images/puntreturn2/", pattern = ".png", full.names = TRUE)
+include_graphics(myimages)
+```
+
+Our model makes a very poor prediction of 4.8 yards for this punt return, assuming that Johnson will be tackled by either the first defender or soon after. This contributes $(85-4.8)^2 \approx 6400$ units worth of squared error to our results, which is an example of why our MSE is much better after filtering outliers like this punt.
+
+Another use case for our model is evaluating many punts by many different returners and evaluating which returners tend to beat the predictions by the most yards. As mentioned in the Motivation section, this may be preferred to a naïve average return yards metric for measuring returner performance, because our metric is able to account for many factors that go into a punt and evaluate all players on the same baseline. To implement xYAF for evaluating returners, we run our best Ridge model on every punt in the three years worth of data. We make predictions on every punt, take the difference between the actual return and the predicted return, and use this as a measurement for kick returner effectiveness when averaged over every all of the returns. Below are the top 10 punt returners (minimum 10 returns) based on $actual - xYAF$.
+
+```{r, echo = F}
+res <- read.csv('results_vs_expected.csv') %>% rename(avg_actual_minus_pred = avg_error, punts_returned = count)
+players <- read.csv('Data/players.csv') %>% rename(player = nflId)
+players$player = as.character(players$player)
+
+res <- res %>% left_join(players, by='player')
+
+res %>%
+  dplyr::select(displayName, avg_actual_minus_pred, punts_returned) %>%
+  filter(punts_returned >= 10) %>% 
+  head(10) %>%
+  kable()
+```
+
+These 10 players consistency outperform their predicted yards after catch by the most. The best among them is DeAndre Carter, a Wide Receiver for the Washington Football Team. Carter averages 6.5 more yards per return than would be expected. Examining Carter's statistics, he averages about 9.4 yards per return over his NFL career $^{[5]}$, which is good but not outstanding. However, as mentioned in the Motivation section, we would expect a player who generally receives the ball with less space to average less return yards, and having less space results from the opponent having longer drives and punting the ball from further down the field which would imply that the returner played for a poor defense. In the 2018 and 2019 seasons where Carter made over 75% of his punt returns, Washington's defense ranked 17th and 27th respectively in yards allowed by opponents $^{[6}}$. These years were also Carter's best two seasons of returning, where he averaged 9.6 and 9.7 yards per game, respectively $^{[5]}$. This is a great example of the usefulness of xYAF, because while Carter's numbers may not be the highest in raw average return yards (Carter's Football Team ranked 25th and 32nd in these two seasons, respectively $^{[6]}$), he is a much better punt returner than those numbers show.
+
+Worst Returners:
+
+```{r, echo = F}
+res %>%
+  dplyr::select(displayName, avg_actual_minus_pred, punts_returned) %>%
+  filter(punts_returned >= 10) %>% 
+  tail(10) %>%
+  kable()
+```
+
+
 
 
 ## Works Cited
@@ -54,5 +132,9 @@ Results with and without outliers, which model ended up working the best, and fi
 [3] https://grantland.com/features/expected-value-possession-nba-analytics/
 
 [4] https://www.nfl.com/news/next-gen-stats-intro-to-expected-yards-after-catch-0ap3000000983644
+
+[5] https://www.pro-football-reference.com/players/C/CartDe02.htm
+
+[6] https://www.footballdb.com/stats/teamstat.html?lg=NFL&yr=2018&type=reg&cat=T&group=D&conf=
 
 

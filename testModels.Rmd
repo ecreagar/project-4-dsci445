@@ -314,7 +314,7 @@ specificPredict1 <- puntinfo[which(puntinfo$gameId == 2019111100 & puntinfo$play
 specificPredict1 <- as.matrix(specificPredict1[,!names(specificPredict1) %in% drop])
 print(predict(ridgeMod, specificPredict1))
 
-
+specificPredict1
 which(puntinfo$gameId == 2019120810)
 
 specificPredict2 <- puntinfo[which(puntinfo$yards_gained == 79.8), ]
@@ -417,9 +417,15 @@ write.csv(res, 'results_vs_expected.csv')
 
 
 ```{r}
-train
+res <- read.csv('results_vs_expected.csv')
+res %>% 
+  filter(count >= 5) %>% 
+  head(10) %>%
+  kable()
 ```
 
+ Here is the first one.
 
+ https://www.youtube.com/watch?v=dL22nNUKllk
 
 
