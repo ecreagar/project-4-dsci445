@@ -61,13 +61,34 @@ Results with and without outliers, which model ended up working the best, and fi
 
 - Final model evaluated on specific punts as well as a list of returners by performance compared to xYAF
 - Problem difficulties (skewed distribution, sometimes accurate predictions aren't even desired)
-- Future goals (usefulness, ideas to improve accuracy).
-  - something that would be cool for the future is a confidence metric that we could model likelihood on. For example, if a returner got 30 yards on a punt where 5 was expected, we could look at the likelihood of that return happening.
-  - Further feature engineering (flip directions)
-  - might there be a better error metric? Something like SMAPE (symmetric mean average percentage error) might work well, so that a prediction 5 yards off on a short punt return is punished more harshly than 5 yards off on a larger punt return.
+
 
 ### Challenges and Solutions
 
+There are many challenges that we battled when trying to accurately punt return yardage. One of the main issues is with the distribution of punt return yardage in general. We know that for some linear models, we assume a normally distributed response variable. However, punt return yards follow a right-skewed distribution.
+
+```{r distr, echo = F, out.width="75%", fig.cap="The distribution of all punt returns", fig.align = 'center'}
+data = read.csv("Data/puntinfo.csv")
+n <- ggplot(data = data, aes(x = yards_gained, fill = ..x..)) + 
+  geom_histogram(bins=100) + 
+  scale_fill_gradient2(low='darkblue', mid='blue', high='lightblue', midpoint=-5, name = 'Yards Gained')
+
+suppressWarnings(print(n))
+```
+
+As we see in the first distribution, while the vast majority of punt returns are in the 0-15 yard range, we observe punt returns all the way up into the 80-yard range. For certain methods, this will cause poor predictions. 
+
+Certain transformations that tend to help this phenomenon, like a square root transform as in the second histogram below, are not viable because we observe negative punt returns about 15% of the time.
+
+```{r sqrt_distr, echo = F, out.width="75%", fig.cap="The distribution of all punt returns with a square root transform applied", fig.align = 'center'}
+l <- ggplot(data = data, aes(x = sqrt(yards_gained), fill = ..x..)) + 
+  geom_histogram(bins=100) + 
+  scale_fill_gradient2(low='darkblue', mid='blue', high='lightblue', midpoint=0, name = 'Yards Gained')
+
+suppressWarnings(print(l))
+```
+
+This leads to another interesting question about our problem, however, that is somewhat unique in prediction cases. When predicting punt return yardage, it may be the case that we do not necessarily want to predict accurately at the right tail of our distribution. If a player makes an outstanding return, evading many nearby defenders and scoring a long touchdown, we wouldn't necessarily want to use this as the standard of what we should expect as these returns are very unlikely. This is the reasoning that led us to dropping the outliers on the right tail, which would not generally be a desirable method for transforming data.
 
 
 ### Applications
@@ -92,9 +113,9 @@ myimages<-list.files("Images/puntreturn2/", pattern = ".png", full.names = TRUE)
 include_graphics(myimages)
 ```
 
-Our model makes a very poor prediction of 4.8 yards for this punt return, assuming that Johnson will be tackled by either the first defender or soon after. This contributes $(85-4.8)^2 \approx 6400$ units worth of squared error to our results, which is an example of why our MSE is much better after filtering outliers like this punt.
+Our model makes a very poor prediction of 4.8 yards for this punt return, assuming that Johnson will be tackled by either the first defender or soon after. This contributes $(85-4.8)^2 \approx 6400$ units worth of squared error to our results, which is an example of why our MSE is much better after filtering outliers like this punt $^{\text{all images courtesy NFL}}$. However, as mentioned previously, we may not even be interested in making an accurate prediction in this case, as this punt return is very unlikely even given its circumstances.
 
-Another use case for our model is evaluating many punts by many different returners and evaluating which returners tend to beat the predictions by the most yards. As mentioned in the Motivation section, this may be preferred to a naïve average return yards metric for measuring returner performance, because our metric is able to account for many factors that go into a punt and evaluate all players on the same baseline. To implement xYAF for evaluating returners, we run our best Ridge model on every punt in the three years worth of data. We make predictions on every punt, take the difference between the actual return and the predicted return, and use this as a measurement for kick returner effectiveness when averaged over every all of the returns. Below are the top 10 punt returners (minimum 10 returns) based on $actual - xYAF$.
+Another use case for our model is evaluating many punts by many different returners and evaluating which returners tend to beat the predictions by the most yards. As mentioned in the Motivation section, this may be preferred to a naïve average return yards metric for measuring returner performance, because our metric is able to account for many factors that go into a punt and evaluate all players on the same baseline. To implement xYAF for evaluating returners, we run our best Ridge model on every punt in the three years worth of data. We make predictions on every punt, take the difference between the actual return and the predicted return, and use this as a measurement for kick returner effectiveness when averaged over every all of the returns. Below are the top 10 punt returners (minimum 10 returns) based on actual - xYAF.
 
 ```{r, echo = F}
 res <- read.csv('results_vs_expected.csv') %>% rename(avg_actual_minus_pred = avg_error, punts_returned = count)
@@ -122,9 +143,15 @@ res %>%
   kable()
 ```
 
-These players consistently performed poorly compared to their projections.
+These players would be considered under performers in our model.
 
 ### Future goals
+  
+Many factors could go into future improvement of this model, including further feature engineering, experimentation with error metrics, and implementation of likelihood intervals. As with many machine learning problems, the features in this model affect our results considerably. To this end, experimentation with our features would most likely lead to lower error if we were to examine our data closely enough. One transformation that comes to mind that may help would be to include more information about blockers in our model. Our data does include information about how far away the blockers are to the returner when he catches the ball, but we could also measure their distances to the defensive players which may help our models understand whether the player will recieve effective blocking.
+
+There are also alternate error metrics that could be useful in our model. For example, one error metric called SMAPE (Symmetric Mean Absolute Percentage Error) $^{[7]}$. This metrics has many uses in prediction, as it places a larger focus on accuracy for small prediction than it does for large predictions. This could be useful in our case, as we may want to treat an error of predicting a 1 yard return when the true return was 5 yards more harshly than a prediction of 12 yards when the true return was 16 yards. The further a punt return is, the more difficult it likely is to predict the exact yardage since we have few punts in the higher yard ranges, so this error metric may be desirable.
+
+Finally, there are features that could improve the usefulness of our model further as well. One such feature would be the implementation of likelihood intervals for each punt return, so that we could evaluate the likelihood of the actual result as well as viewing it in context with all of the other possible results. We could implement this using simple confidence intervals, and it may be included once we are able to tune our models to a higher standard of prediction.
 
 ## Works Cited
 
@@ -139,5 +166,7 @@ These players consistently performed poorly compared to their projections.
 [5] https://www.pro-football-reference.com/players/C/CartDe02.htm
 
 [6] https://www.footballdb.com/stats/teamstat.html?lg=NFL&yr=2018&type=reg&cat=T&group=D&conf=
+
+[7] https://en.wikipedia.org/wiki/Symmetric_mean_absolute_percentage_error
 
 
