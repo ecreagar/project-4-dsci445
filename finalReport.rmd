@@ -43,6 +43,8 @@ Results with and without outliers, which model ended up working the best, and fi
   - something that would be cool for the future is a confidence metric that we could model likelihood on. For example, if a returner got 30 yards on a punt where 5 was expected, we could look at the likelihood of that return happening.
 - might there be a better error metric? Something like SMAPE (symmetric mean average percentage error) might work well, so that a prediction 5 yards off on a short punt return is punished more harshly than 5 yards off on a larger punt return.
 
+
+
 ## Works Cited
 
 [1] https://operations.nfl.com/gameday/analytics/big-data-bowl/

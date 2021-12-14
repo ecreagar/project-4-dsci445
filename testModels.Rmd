@@ -316,6 +316,10 @@ print(predict(ridgeMod, specificPredict1))
 
 
 which(puntinfo$gameId == 2019120810)
+
+specificPredict2 <- puntinfo[which(puntinfo$yards_gained == 79.8), ]
+specificPredict2 <- as.matrix(specificPredict2[,!names(specificPredict2) %in% drop])
+print(predict(ridgeMod,specificPredict2))
 ```
 
 
@@ -325,6 +329,97 @@ which(puntinfo$gameId == 2019120810)
 mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE, "Random_Forest"=forestMSE, "Best_Subset"=bestSubsetMSE, "Boosting"=MSE.boost))
 print(mseTable)
 ```
+
+```{r}
+
+# Evaluate specific punt returns
+
+results_vs_expected <- data.frame()
+
+colList2 = c("receiving_player_1", "receiving_player_2", "receiving_player_3", "receiving_player_4", "receiving_player_5", "receiving_player_6", "receiving_player_7", "receiving_player_8", "receiving_player_9", "receiving_player_10", "receiving_player_11", "punting_player_1", "punting_player_2", "punting_player_3", "punting_player_4", "punting_player_5", "punting_player_6", "punting_player_7", "punting_player_8", "punting_player_9", "punting_player_10", "punting_player_11")
+
+awayPlayerList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11")
+
+homePlayerList = c("home_player_1", "home_player_2", "home_player_3", "home_player_4", "home_player_5", "home_player_6", "home_player_7", "home_player_8", "home_player_9", "home_player_10", "home_player_11")
+
+noPlayerDF = puntinfo[, (names(puntinfo) %in% noPlayerList)]
+
+
+returns <- read.csv('Data/returns_by_player.csv')
+for (i in c(0:nrow(returns))){
+  datapoint = data.frame()
+  gameId <- returns[i,'gameId']
+  playId <- returns[i,'playId']
+  returnerId <- returns[i,'returnerId']
+  punt <- puntinfo[which(puntinfo$gameId == gameId & puntinfo$playId == playId), ]
+  if(nrow(punt) != 1){
+    next
+  }
+  awayPlayerDF = punt[, (names(puntinfo) %in% awayPlayerList)]
+  homePlayerDF = punt[, (names(puntinfo) %in% homePlayerList)]
+  
+  for (p in 1:nrow(awayPlayerDF)){
+    tempRowAway = sort(unlist(awayPlayerDF[p,], use.names = FALSE))
+    tempRowHome = sort(unlist(homePlayerDF[p,], use.names = FALSE))
+    minAway = suppressWarnings(min(tempRowAway))
+    minHome = suppressWarnings(min(tempRowHome))
+    if(minAway<minHome){
+      tempRow = append(tempRowAway, tempRowHome)
+    }
+    else{
+      tempRow = append(tempRowHome, tempRowAway)
+    }
+  }
+  
+  datapoint <- data.frame(hangTime = punt['hangTime'], 
+                          punt_position_x = punt['punt_position_x'],
+                          punt_position_y = punt['punt_position_x'], 
+                          field_position_x = punt['field_position_x'],
+                          field_position_y = punt['field_position_y'],
+                          receiving_player_1 = tempRow[1], 
+                          receiving_player_2 = tempRow[2], 
+                          receiving_player_3 = tempRow[3], 
+                          receiving_player_4 = tempRow[4], 
+                          receiving_player_5 = tempRow[5], 
+                          receiving_player_6 = tempRow[6], 
+                          receiving_player_7 = tempRow[7], 
+                          receiving_player_8 = tempRow[8], 
+                          receiving_player_9 = tempRow[9], 
+                          receiving_player_10 = tempRow[10], 
+                          receiving_player_11 = tempRow[11], 
+                          punting_player_1 = tempRow[12], 
+                          punting_player_2 = tempRow[13], 
+                          punting_player_3 = tempRow[14], 
+                          punting_player_4 = tempRow[15], 
+                          punting_player_5 = tempRow[16], 
+                          punting_player_6 = tempRow[17], 
+                          punting_player_7 = tempRow[18], 
+                          punting_player_8 = tempRow[19], 
+                          punting_player_9 = tempRow[20], 
+                          punting_player_10 = tempRow[21], 
+                          punting_player_11 = tempRow[22])
+  
+  pred <- predict(ridgeMod, as.matrix(datapoint), s=ridgeMod$lambda.min)
+  results_vs_expected %>% 
+    bind_rows(data.frame(player = returnerId, predicted = pred[1], actual = punt['yards_gained'])) -> 
+    results_vs_expected
+}
+
+results_vs_expected %>%
+  mutate(avg_error = (yards_gained - predicted)) %>%
+  group_by(player) %>%
+  summarise(avg_error = mean(avg_error), count = n()) -> results_vs_expected
+
+res <- results_vs_expected[order(-results_vs_expected$avg_error),]
+
+write.csv(res, 'results_vs_expected.csv')
+```
+
+
+```{r}
+train
+```
+
 
 
 
