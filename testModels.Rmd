@@ -34,6 +34,10 @@ library(splines)
 puntinfo = read.csv("Data/puntinfo.csv")
 # Get rid of NA row
 puntinfo <- na.omit(puntinfo)
+
+# Swap positions to be the same
+# puntinfo$punt_position_x <- (puntinfo$punt_position_x - 120) * (-1)
+# puntinfo$field_position_x  <- (puntinfo$field_position_x - 120) * (-1)
 ```
 
 ```{r}
