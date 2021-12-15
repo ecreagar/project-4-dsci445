@@ -133,6 +133,8 @@ res %>%
 
 These 10 players consistency outperform their predicted yards after catch by the most. The best among them is DeAndre Carter, a Wide Receiver for the Washington Football Team. Carter averages 6.5 more yards per return than would be expected. Examining Carter's statistics, he averages about 9.4 yards per return over his NFL career $^{[5]}$, which is good but not outstanding. However, as mentioned in the Motivation section, we would expect a player who generally receives the ball with less space to average less return yards, and having less space results from the opponent having longer drives and punting the ball from further down the field which would imply that the returner played for a poor defense. In the 2018 and 2019 seasons where Carter made over 75% of his punt returns, Washington's defense ranked 17th and 27th respectively in yards allowed by opponents $^{[6]}$. These years were also Carter's best two seasons of returning, where he averaged 9.6 and 9.7 yards per return, respectively $^{[5]}$. This is a great example of the usefulness of xYAF, because while Carter's numbers may not be the highest in raw average return yards (Carter's Football Team ranked 25th and 32nd in average punt return yards in these two seasons, respectively $^{[6]}$), he is a much better punt returner than those numbers show.
 
+
+
 We can also view the returners that performed the worst against our projections.
 
 ```{r, echo = F}
