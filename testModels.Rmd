@@ -36,8 +36,8 @@ puntinfo = read.csv("Data/puntinfo.csv")
 puntinfo <- na.omit(puntinfo)
 
 # Swap positions to be the same
-# puntinfo$punt_position_x <- (puntinfo$punt_position_x - 120) * (-1)
-# puntinfo$field_position_x  <- (puntinfo$field_position_x - 120) * (-1)
+puntinfo$punt_position_x[puntinfo$punt_position_x > 60] <- (puntinfo$punt_position_x[puntinfo$punt_position_x > 60] - 120) * (-1)
+puntinfo$punt_position_x[puntinfo$punt_position_x > 60] <- (puntinfo$punt_position_x[puntinfo$punt_position_x > 60] - 120) * (-1)
 ```
 
 ```{r}
