@@ -7,74 +7,429 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-```{r}
-# for authenticating github, follow the instructions below
-# https://gist.githubusercontent.com/z3tt/3dab3535007acf108391649766409421/raw/2ce9dba43ead7e88d9f2416b9fd21379b227af32/github.R
-library(usethis)
+set.seed(445)
 
-```
-
-```{r packages}
-library(tidyverse)
+# Installing a bunch of packages
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(ISLR)
+library(caret)
+library(MASS)
+library(class)
 library(knitr)
-library(reticulate)
-
-# install python packages using conda
-# py_install("pandas")
-# py_install("numpy")
+library(leaps)
+library(glmnet)
+library(boot)
+library(gam)
+library(tree)
+library(gbm)
+library(randomForest)
+library(e1071)
+library(splines)
 ```
-
-Read the subsetted data:
 
 ```{r}
-data <- read_csv('Data/punts_1percent.csv')
-data
+puntinfo = read.csv("Data/puntinfo.csv")
+# Get rid of NA row
+puntinfo <- na.omit(puntinfo)
+
+# Swap positions to be the same
+# puntinfo$punt_position_x <- (puntinfo$punt_position_x - 120) * (-1)
+# puntinfo$field_position_x  <- (puntinfo$field_position_x - 120) * (-1)
 ```
 
+```{r}
+colList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11", "home_player_1", "home_player_2", "home_player_3", "home_player_4", "home_player_5", "home_player_6", "home_player_7", "home_player_8", "home_player_9", "home_player_10", "home_player_11")
 
-Need to:
-- Find all the punts from one game and extract the corresponding frames
-- Extract the frames (punt made and kick fielded)
-- Join the player positions from each return
+calcDistance <- function(x1, y1, x2, y2){
+  distance = sqrt((x1-x2)^2 + (y1-y2)^2)
+  return(distance)
+}
+
+for (i in 1:length(colList)){
+  for(j in 1:nrow(puntinfo)){
+    tempSplit = strsplit(puntinfo[j, colList[i]], ",")[[1]]
+    tempX = as.numeric(substring(tempSplit[1], 2))
+    tempY = as.numeric(substring(tempSplit[2], 2,nchar(tempSplit[2])-1))
+    catchX = puntinfo[j, "field_position_x"]
+    catchY = puntinfo[j, "field_position_y"]
+    puntinfo[j, colList[i]] = calcDistance(tempX, tempY, catchX, catchY)
+  }
+}
+
+puntinfo[9:30] <- sapply(puntinfo[9:30], as.numeric)
+```
+
+```{r}
+noPlayerList = c("gameId", "playId", "hangTime", "playDirection", "punt_position_x", "punt_position_y", "field_position_x", "field_position_y", "yards_gained")
+
+awayPlayerList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11")
+
+homePlayerList = c("home_player_1", "home_player_2", "home_player_3", "home_player_4", "home_player_5", "home_player_6", "home_player_7", "home_player_8", "home_player_9", "home_player_10", "home_player_11")
+
+colList2 = c("receiving_player_1", "receiving_player_2", "receiving_player_3", "receiving_player_4", "receiving_player_5", "receiving_player_6", "receiving_player_7", "receiving_player_8", "receiving_player_9", "receiving_player_10", "receiving_player_11", "punting_player_1", "punting_player_2", "punting_player_3", "punting_player_4", "punting_player_5", "punting_player_6", "punting_player_7", "punting_player_8", "punting_player_9", "punting_player_10", "punting_player_11")
+
+noPlayerDF = puntinfo[, (names(puntinfo) %in% noPlayerList)]
+awayPlayerDF = puntinfo[, (names(puntinfo) %in% awayPlayerList)]
+homePlayerDF = puntinfo[, (names(puntinfo) %in% homePlayerList)]
+
+playerSorted = data.frame(matrix(ncol = 22, nrow=0))
+colnames(playerSorted) = colList2
+
+for (i in 1:nrow(awayPlayerDF)){
+  tempRowAway = sort(unlist(awayPlayerDF[i,], use.names = FALSE))
+  tempRowHome = sort(unlist(homePlayerDF[i,], use.names = FALSE))
+  minAway = min(tempRowAway)
+  minHome = min(tempRowHome)
+  if(minAway<minHome){
+    tempRow = append(tempRowAway, tempRowHome)
+  }
+  else{
+    tempRow = append(tempRowHome, tempRowAway)
+  }
+  
+  playerSorted[nrow(playerSorted)+1,] = tempRow
+}
+
+puntSorted = cbind(noPlayerDF, playerSorted)
+
+# Remove outliers
+out <- boxplot.stats(puntSorted$yards_gained)$out
+out_ind <- which(puntSorted$yards_gained %in% c(out))
+puntSorted <- puntSorted[-out_ind,]
+```
 
 
 ```{r}
-readr
-```
+drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y", "playDirection")
+puntSorted<- puntSorted[,!(names(puntSorted) %in% drop)]
+sample <- createDataPartition(puntSorted$yards_gained, p = 0.8, list = FALSE)
 
+train <- puntSorted[sample,]
+test <- puntSorted[-sample,]
 
-
-
-
-```{python}
-# Run python code like this
-print('hello world')
-# create a new python session variable
-x = 1
-
+xtrain <- as.matrix(subset(train, select=-c(yards_gained)))
+xtest <- as.matrix(subset(test, select=-c(yards_gained)))
+ytrain <- as.matrix(subset(train, select=c(yards_gained)))
+ytest <- as.matrix(subset(test, select=c(yards_gained)))
+# xtrain <- model.matrix(yards_gained~., train)[,-1]
+# xtest <- model.matrix(yards_gained~., test)[,-1]
 ```
 
 
 ```{r}
-# Run R code in these chunks like normal
-print('hello world')
+# Linear Regression
+lmMod <- lm(yards_gained ~ ., data = train)
+
+summary(lmMod)
+
+plot(lmMod)
+
+pred <- predict(lmMod, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_smooth(method='lm', formula = y~x) +
+  geom_abline(color = 'red')
 
 
-# create a new variable to access in the python session
-py$y <- c(1,2,3)
-
-y <- 'cow'
-
-x_new <- py$x()
-x_new
+lmMSE <- mean((pred - test$yards_gained)^2)
 ```
 
-```{python}
-# access python session variables from python chunks
-y
 
-# You can't access R session variables from python chunks
-R$y
+```{r}
+# Logistic Regression
+logitModel <- glm(yards_gained ~ ., data = train)
+summary(logitModel)
+
+pred <- predict(logitModel, test)
+logitMSE <- mean((pred - test$yards_gained)^2)
 ```
+
+```{r}
+# Best subset selection
+subsetMod <- regsubsets(yards_gained ~ ., data = train, nvmax = 20, method = "backward")
+
+ggplot() +
+    geom_point(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) + 
+    geom_line(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) +
+    ylab("AdjR2") +
+    xlab("Size of Subset")
+
+which.max(summary(subsetMod)$adjr2)
+coef(subsetMod, 16)
+plot(subsetMod, scale = "adjr2")
+
+
+subsetMod <- regsubsets(yards_gained ~ ., data = train, nvmax = 20, method = "forward")
+
+ggplot() +
+    geom_point(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) + 
+    geom_line(aes(x = seq(1, 20), y = summary(subsetMod)$adjr2)) +
+    ylab("AdjR2") +
+    xlab("Size of Subset")
+
+
+which.max(summary(subsetMod)$adjr2)
+coef(subsetMod, 16)
+plot(subsetMod, scale = "adjr2")
+
+bestSubsetMod <- lm(yards_gained ~ hangTime + punt_position_x + field_position_x + receiving_player_1 + receiving_player_3 + receiving_player_4 + receiving_player_5 + receiving_player_6 + receiving_player_10 + receiving_player_11 + punting_player_1 + punting_player_2 + punting_player_3 + punting_player_7 + punting_player_9 + punting_player_10, data = train)
+
+summary(bestSubsetMod)
+
+pred <- predict(bestSubsetMod, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_smooth(method='lm', formula = y~x) +
+  geom_abline(color = 'red')
+
+
+bestSubsetMSE <- mean((pred - test$yards_gained)^2)
+
+```
+
+```{r}
+# Lasso
+lassoMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 1, nfolds = 10)
+
+pred <- predict(lassoMod, s = lassoMod$lambda.min, newx = xtest)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, pred=pred))
+
+ggplot(predTable, aes(x = actuals, y = pred)) +
+  geom_point() +
+  geom_abline(color = 'blue')
+
+lassoMSE <- mean((pred - test$yards_gained)^2)
+```
+
+```{r}
+# Ridge Regression
+lambda <- 10^seq(-2, 10, length.out = 100)
+ridgeMod <- cv.glmnet(x = xtrain, y = train$yards_gained, alpha = 0, lambda = lambda)
+ridgePred = predict(ridgeMod, xtest, s=ridgeMod$lambda.min)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, pred=ridgePred))
+
+ggplot(predTable, aes(x = actuals, y = pred)) +
+  geom_point() +
+  geom_abline(color = 'blue')
+
+ridgeMSE <- mean((ridgePred - test$yards_gained)^2)
+```
+
+
+```{r}
+# GAMs
+gamMod <- gam(yards_gained ~ ., data = train)
+summary(gamMod)
+
+pred <- predict(gamMod, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_smooth(method='gam', formula = y~x) +
+  geom_abline(color = 'red')
+
+gamMSE <- mean((pred - test$yards_gained)^2)
+```
+
+```{r}
+splineMod = gam(yards_gained ~ ns(hangTime, df=6) + ns(punt_position_x, df=6) + ns(punt_position_y, df=6) + ns(field_position_x, df=6) + ns(field_position_y, df=6) + ns(receiving_player_1, df=6)+ ns(receiving_player_2, df=6)+ ns(receiving_player_3, df=6)+ ns(receiving_player_4, df=6)+ ns(receiving_player_5, df=6)+ ns(receiving_player_6, df=6)+ ns(receiving_player_7, df=6)+ ns(receiving_player_8, df=6)+ ns(receiving_player_1, df=9)+ ns(receiving_player_10, df=6)+ ns(receiving_player_11, df=6)+ ns(punting_player_1, df=6)+ ns(punting_player_2, df=6)+ ns(punting_player_3, df=6)+ ns(punting_player_4, df=6)+ ns(punting_player_5, df=6)+ ns(punting_player_6, df=6)+ ns(punting_player_7, df=6)+ ns(punting_player_8, df=6)+ ns(punting_player_10, df=6)+ ns(punting_player_11, df=6), data=train)
+
+splinePred <- predict(splineMod, test)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=splinePred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
+
+splineMSE <- mean((splinePred - test$yards_gained)^2)
+```
+
+```{r}
+# Trees
+treeModel <- tree(yards_gained ~., data = train)
+summary(treeModel)
+plot(treeModel)
+text(treeModel)
+
+pred <- predict(treeModel, test)
+treeMSE <- mean((pred - test$yards_gained)^2)
+```
+
+
+```{r}
+# Random Forest
+forestMod <- randomForest(x = xtrain, y = ytrain, data = train, importance = TRUE, ntree = 1000)
+forestMod
+pred <- predict(forestMod, test)
+forestMSE <- mean((pred - test$yards_gained)^2)
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
+```
+
+```{r}
+# SVM
+svmMod <- svm(yards_gained ~ ., data = train)
+predSVM <- predict(svmMod, test)
+
+svmMSE <- mean((predSVM - test$yards_gained)^2)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=predSVM))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
+```
+
+```{r}
+# Boosted Model
+boostMod <- gbm(yards_gained~., data = train, distribution = 'gaussian', shrinkage = 0.01, n.trees=1000)
+
+pred.boost=predict(boostMod, test, n.trees=1000)
+MSE.boost <- mean((pred.boost - test[,'yards_gained'])^2)
+
+predTable <- data.frame(cbind(actuals=test$yards_gained, predicted=pred.boost))
+
+ggplot(predTable, aes(x = actuals, y = predicted)) +
+  geom_point() +
+  geom_abline(color = 'red')
+```
+
+```{r}
+# Specific predictions
+drop <- c("X","gameId", "playId", "specialTeamsResult" , "tackle_position_x", "tackle_position_y", "playDirection", "yards_gained")
+specificPredict1 <- puntinfo[which(puntinfo$gameId == 2019111100 & puntinfo$playId == 904), ]
+specificPredict1 <- as.matrix(specificPredict1[,!names(specificPredict1) %in% drop])
+print(predict(ridgeMod, specificPredict1))
+
+specificPredict1
+which(puntinfo$gameId == 2019120810)
+
+specificPredict2 <- puntinfo[which(puntinfo$yards_gained == 79.8), ]
+specificPredict2 <- as.matrix(specificPredict2[,!names(specificPredict2) %in% drop])
+print(predict(ridgeMod,specificPredict2))
+```
+
+
+
+```{r}
+# Analysis
+mseTable <- data.frame(cbind("Linear"=lmMSE, "Logit"=logitMSE, "Lasso"=lassoMSE, "Ridge"=ridgeMSE, "GAM"=gamMSE, "SVM"=svmMSE, "Spline"=splineMSE, "Random_Forest"=forestMSE, "Best_Subset"=bestSubsetMSE, "Boosting"=MSE.boost))
+print(mseTable)
+```
+
+```{r}
+
+# Evaluate specific punt returns
+
+results_vs_expected <- data.frame()
+
+colList2 = c("receiving_player_1", "receiving_player_2", "receiving_player_3", "receiving_player_4", "receiving_player_5", "receiving_player_6", "receiving_player_7", "receiving_player_8", "receiving_player_9", "receiving_player_10", "receiving_player_11", "punting_player_1", "punting_player_2", "punting_player_3", "punting_player_4", "punting_player_5", "punting_player_6", "punting_player_7", "punting_player_8", "punting_player_9", "punting_player_10", "punting_player_11")
+
+awayPlayerList = c("away_player_1", "away_player_2", "away_player_3", "away_player_4", "away_player_5", "away_player_6", "away_player_7", "away_player_8", "away_player_9", "away_player_10", "away_player_11")
+
+homePlayerList = c("home_player_1", "home_player_2", "home_player_3", "home_player_4", "home_player_5", "home_player_6", "home_player_7", "home_player_8", "home_player_9", "home_player_10", "home_player_11")
+
+noPlayerDF = puntinfo[, (names(puntinfo) %in% noPlayerList)]
+
+
+returns <- read.csv('Data/returns_by_player.csv')
+for (i in c(0:nrow(returns))){
+  datapoint = data.frame()
+  gameId <- returns[i,'gameId']
+  playId <- returns[i,'playId']
+  returnerId <- returns[i,'returnerId']
+  punt <- puntinfo[which(puntinfo$gameId == gameId & puntinfo$playId == playId), ]
+  if(nrow(punt) != 1){
+    next
+  }
+  awayPlayerDF = punt[, (names(puntinfo) %in% awayPlayerList)]
+  homePlayerDF = punt[, (names(puntinfo) %in% homePlayerList)]
+  
+  for (p in 1:nrow(awayPlayerDF)){
+    tempRowAway = sort(unlist(awayPlayerDF[p,], use.names = FALSE))
+    tempRowHome = sort(unlist(homePlayerDF[p,], use.names = FALSE))
+    minAway = suppressWarnings(min(tempRowAway))
+    minHome = suppressWarnings(min(tempRowHome))
+    if(minAway<minHome){
+      tempRow = append(tempRowAway, tempRowHome)
+    }
+    else{
+      tempRow = append(tempRowHome, tempRowAway)
+    }
+  }
+  
+  datapoint <- data.frame(hangTime = punt['hangTime'], 
+                          punt_position_x = punt['punt_position_x'],
+                          punt_position_y = punt['punt_position_x'], 
+                          field_position_x = punt['field_position_x'],
+                          field_position_y = punt['field_position_y'],
+                          receiving_player_1 = tempRow[1], 
+                          receiving_player_2 = tempRow[2], 
+                          receiving_player_3 = tempRow[3], 
+                          receiving_player_4 = tempRow[4], 
+                          receiving_player_5 = tempRow[5], 
+                          receiving_player_6 = tempRow[6], 
+                          receiving_player_7 = tempRow[7], 
+                          receiving_player_8 = tempRow[8], 
+                          receiving_player_9 = tempRow[9], 
+                          receiving_player_10 = tempRow[10], 
+                          receiving_player_11 = tempRow[11], 
+                          punting_player_1 = tempRow[12], 
+                          punting_player_2 = tempRow[13], 
+                          punting_player_3 = tempRow[14], 
+                          punting_player_4 = tempRow[15], 
+                          punting_player_5 = tempRow[16], 
+                          punting_player_6 = tempRow[17], 
+                          punting_player_7 = tempRow[18], 
+                          punting_player_8 = tempRow[19], 
+                          punting_player_9 = tempRow[20], 
+                          punting_player_10 = tempRow[21], 
+                          punting_player_11 = tempRow[22])
+  
+  pred <- predict(ridgeMod, as.matrix(datapoint), s=ridgeMod$lambda.min)
+  results_vs_expected %>% 
+    bind_rows(data.frame(player = returnerId, predicted = pred[1], actual = punt['yards_gained'])) -> 
+    results_vs_expected
+}
+
+results_vs_expected %>%
+  mutate(avg_error = (yards_gained - predicted)) %>%
+  group_by(player) %>%
+  summarise(avg_error = mean(avg_error), count = n()) -> results_vs_expected
+
+res <- results_vs_expected[order(-results_vs_expected$avg_error),]
+
+write.csv(res, 'results_vs_expected.csv')
+```
+
+
+```{r}
+res <- read.csv('results_vs_expected.csv')
+res %>% 
+  filter(count >= 5) %>% 
+  head(10) %>%
+  kable()
+```
+
+ Here is the first one.
+
+ https://www.youtube.com/watch?v=dL22nNUKllk
+
+
