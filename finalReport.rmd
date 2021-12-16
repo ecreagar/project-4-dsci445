@@ -60,34 +60,23 @@ We modeled our data using linear regression, logistic regression, LASSO regressi
 
 ## Part 3: Results
 
-Results with and without outliers, which model ended up working the best, and fine tuning that model further with CV in order to get the minimum possible MSE (translate to yards as well).
+When we first ran these models with the whole dataset (which included about 60 statistical outliers), the outcomes produced had much more variance and higher MSEs then when we executed the models with the new dataset excluding the outliers. For each of the models tested, we produced a "predicted vs actual" plot to visualize the accuracy of the models in predicting xYAF. If the data points were close to the center line (which corresponds to the predicted values equaling the actual values), then that shows that the model did a better job at predicting the xYAF that we saw in our test dataset. 
 
-When we first ran these models with the whole dataset (which included about 60 statistical outliers), the outcomes produced had much more variance and higher MSEs then when we executed the models with the new dataset excluding the outliers. For each of the models tested, we produced a "predicted vs actual" plot to visualize the accuracy of the models in predicting xYAF. 
-
-```{r, echo=FALSE,fig.show="hold", out.width="55%", fig.cap="Linear and Best Subset Model"}
-par(mar = c(4, 4, .1, .1))
-knitr::include_graphics("Images/ActPredLM.png")
+```{r BestSub, echo=FALSE,fig.show="hold", out.width="55%", fig.cap="Best Subset Model",fig.align = 'center'}
 knitr::include_graphics("Images/ActPredBestSubset.png")
 ```
-```{r, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Lasso and Ridge Model"}
-par(mar = c(4, 4, .1, .1))
-knitr::include_graphics("Images/ActPredLasso.png")
+```{r Ridge, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Ridge Model",fig.align = 'center'}
 knitr::include_graphics("Images/ActPredRidge.png")
 ```
-```{r, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Tree and GAM Model"}
-par(mar = c(4, 4, .1, .1))
-knitr::include_graphics("Images/ActPredForest.png")
+```{r Gam, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="GAM Model",fig.align = 'center'}
 knitr::include_graphics("Images/ActPredGam.png")
 ```
-```{r, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Boosting and Spline Model"}
-par(mar = c(4, 4, .1, .1))
-knitr::include_graphics("Images/ActPredBoost.png")
-knitr::include_graphics("Images/ActPredSpline.png")
-```
 
-These plots look very similar to each other each model appearing to have a similar spread of data points from the perfect prediction line. These plots show that the models we used had a decent ability to predict xYAF. Based on the mean squared error (MSE) of all the models used, ridge regression has the lowest MSE with 33.52. This means that on average, our predicted xYAF has an error of 5.74 yards. 
+\newpage
 
-![MSEs](Images/ModelComparison.png)
+These plots of our best performing models look very similar to each other each model appearing to have a similar spread of data points from the perfect prediction line. These plots show that the models we used had a decent ability to predict xYAF. Based on the mean squared error (MSE) of all the models used, ridge regression has the lowest MSE with 33.52. This means that on average, our predicted xYAF has an error of 5.74 yards. 
+
+![MSEs](Images/ModelComparison.png){width=80%}
 
 This error is acceptable in terms of how its played in the context of punts. Having a prediction within 5.74 yards shows that this can be method can be a viable metric for predicting punts. Although this method had the lowest MSE, all the methods we tested had similar MSEs meaning each method had a similar performance in accurately predicting yards gained after fielding the punt. This shows that our methods could be further improved even further to lower the MSE and improve the accuracy of predicting xYAF. 
 
@@ -96,7 +85,7 @@ This error is acceptable in terms of how its played in the context of punts. Hav
 
 There are many challenges that we battled when trying to accurately punt return yardage. One of the main issues is with the distribution of punt return yardage in general. We know that for some linear models, we assume a normally distributed response variable. However, punt return yards follow a right-skewed distribution.
 
-```{r distr, echo = F, out.width="75%", fig.cap="The distribution of all punt returns", fig.align = 'center'}
+```{r distr, echo = F, out.width="65%", fig.cap="The distribution of all punt returns", fig.align = 'center'}
 data = read.csv("Data/puntinfo.csv")
 n <- ggplot(data = data, aes(x = yards_gained, fill = ..x..)) + 
   geom_histogram(bins=100) + 
@@ -109,7 +98,9 @@ As we see in the first distribution, while the vast majority of punt returns are
 
 Certain transformations that tend to help this phenomenon, like a square root transform as in the second histogram below, are not viable because we observe negative punt returns about 15% of the time.
 
-```{r sqrt_distr, echo = F, out.width="75%", fig.cap="The distribution of all punt returns with a square root transform applied", fig.align = 'center'}
+\newpage
+
+```{r sqrt_distr, echo = F, out.width="65%", fig.cap="The distribution of all punt returns with a square root transform applied", fig.align = 'center'}
 l <- ggplot(data = data, aes(x = sqrt(yards_gained), fill = ..x..)) + 
   geom_histogram(bins=100) + 
   scale_fill_gradient2(low='darkblue', mid='blue', high='lightblue', midpoint=0, name = 'Yards Gained')
@@ -135,7 +126,6 @@ include_graphics(myimages)
 Out model considers all of the relevant information above for this return, and is able to make a very good prediction, predicting 1.52 yards, just 0.06 fewer than the actual return of 1.58 yards. This is an example of a fairly normal punt return, which is likely why our model is able to predict very well in this scenario.
 
 We will also evaluate a second, less common punt return where our model struggles to make an accurate prediction. This return took place between the Pittsburgh Steelers and Arizona Cardinals in Week 14 of the 2019 season. The Cardinals punt from their own 15 yard line, and after a very long punt Diontae Johnson fields the punt at the Steelers 15 yard line. The closest defender is 11 yards away, but there are hardly any defenders nearby other than him and the Steelers have a blocker near this defender. Johnson is able to evade the entire defense, taking the punt back for an 85 yard touchdown.
-
 
 ```{r, echo = FALSE, out.width="33.3%"}
 myimages<-list.files("Images/puntreturn2/", pattern = ".png", full.names = TRUE)
