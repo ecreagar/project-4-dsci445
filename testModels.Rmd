@@ -1,8 +1,8 @@
 ---
-title: "TestModels"
-output:
-  html_document:
-    df_print: paged
+title: "Group 4 Final Project"
+author: "Ethan, Kilbourne, Michael"
+date: "11/16/2021"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
