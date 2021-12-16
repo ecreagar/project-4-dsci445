@@ -62,10 +62,34 @@ We modeled our data using linear regression, logistic regression, LASSO regressi
 
 Results with and without outliers, which model ended up working the best, and fine tuning that model further with CV in order to get the minimum possible MSE (translate to yards as well).
 
-## Part 4: Conclusion
+When we first ran these models with the whole dataset (which included about 60 statistical outliers), the outcomes produced had much more variance and higher MSEs then when we executed the models with the new dataset excluding the outliers. For each of the models tested, we produced a "predicted vs actual" plot to visualize the accuracy of the models in predicting xYAF. 
 
-- Final model evaluated on specific punts as well as a list of returners by performance compared to xYAF
-- Problem difficulties (skewed distribution, sometimes accurate predictions aren't even desired)
+```{r, echo=FALSE,fig.show="hold", out.width="55%", fig.cap="Linear and Best Subset Model"}
+par(mar = c(4, 4, .1, .1))
+knitr::include_graphics("Images/ActPredLM.png")
+knitr::include_graphics("Images/ActPredBestSubset.png")
+```
+```{r, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Lasso and Ridge Model"}
+par(mar = c(4, 4, .1, .1))
+knitr::include_graphics("Images/ActPredLasso.png")
+knitr::include_graphics("Images/ActPredRidge.png")
+```
+```{r, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Tree and GAM Model"}
+par(mar = c(4, 4, .1, .1))
+knitr::include_graphics("Images/ActPredForest.png")
+knitr::include_graphics("Images/ActPredGam.png")
+```
+```{r, echo=FALSE, fig.show="hold", out.width="55%", fig.cap="Boosting and Spline Model"}
+par(mar = c(4, 4, .1, .1))
+knitr::include_graphics("Images/ActPredBoost.png")
+knitr::include_graphics("Images/ActPredSpline.png")
+```
+
+These plots look very similar to each other each model appearing to have a similar spread of data points from the perfect prediction line. These plots show that the models we used had a decent ability to predict xYAF. Based on the mean squared error (MSE) of all the models used, ridge regression has the lowest MSE with 33.52. This means that on average, our predicted xYAF has an error of 5.74 yards. 
+
+![MSEs](Images/ModelComparison.png)
+
+This error is acceptable in terms of how its played in the context of punts. Having a prediction within 5.74 yards shows that this can be method can be a viable metric for predicting punts. Although this method had the lowest MSE, all the methods we tested had similar MSEs meaning each method had a similar performance in accurately predicting yards gained after fielding the punt. This shows that our methods could be further improved even further to lower the MSE and improve the accuracy of predicting xYAF. 
 
 
 ### Challenges and Solutions
